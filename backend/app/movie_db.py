@@ -72,10 +72,60 @@ class MovieDatabase:
         except mysql.connector.Error as error:
             raise NotImplementedError(f"Failed to insert movies: {error}")
 
-    def get_all_movies(self) -> List[Dict[str, Any]]:
+    def get_all_movies(
+        self,
+        page: int = 1,
+        page_size: int = 10,
+        category: str | None = None,
+        director: str | None = None,
+        year: int | None = None,
+        min_rating: float | None = None,
+        max_rating: float | None = None,
+    ) -> Dict[str, Any]:
         try:
-            self.cursor.execute("SELECT * FROM movies;")
-            return self.cursor.fetchall()
+            where_clauses: List[str] = []
+            where_values: List[Any] = []
+
+            if category:
+                where_clauses.append("category = %s")
+                where_values.append(category)
+            if director:
+                where_clauses.append("director = %s")
+                where_values.append(director)
+            if year is not None:
+                where_clauses.append("year = %s")
+                where_values.append(year)
+            if min_rating is not None:
+                where_clauses.append("rating >= %s")
+                where_values.append(min_rating)
+            if max_rating is not None:
+                where_clauses.append("rating <= %s")
+                where_values.append(max_rating)
+
+            where_sql = ""
+            if where_clauses:
+                where_sql = " WHERE " + " AND ".join(where_clauses)
+
+            offset = (page - 1) * page_size
+
+            count_sql = f"SELECT COUNT(*) AS total FROM movies{where_sql};"
+            self.cursor.execute(count_sql, tuple(where_values))
+            total = int(self.cursor.fetchone()["total"])
+
+            data_sql = f"SELECT * FROM movies{where_sql} ORDER BY id DESC LIMIT %s OFFSET %s;"
+            data_values = [*where_values, page_size, offset]
+            self.cursor.execute(data_sql, tuple(data_values))
+            movies = self.cursor.fetchall()
+
+            total_pages = (total + page_size - 1) // page_size if total else 0
+
+            return {
+                "items": movies,
+                "page": page,
+                "page_size": page_size,
+                "total": total,
+                "total_pages": total_pages,
+            }
         except mysql.connector.Error as error:
             raise NotImplementedError(f"Failed to retrieve movies: {error}")
     
