@@ -60,7 +60,7 @@ class MovieDatabase:
                     row['year'],
                     row['rating'],
                     row.get('description'),
-                    row.get('synopsis')
+                    row.get('synopsis') or ""
                 )
                 for row in rows
             ]
@@ -78,7 +78,14 @@ class MovieDatabase:
             return self.cursor.fetchall()
         except mysql.connector.Error as error:
             raise NotImplementedError(f"Failed to retrieve movies: {error}")
-        
+    
+    def get_one_movie(self) -> Optional[Dict[str, Any]]:
+        try:
+            self.cursor.execute("SELECT * FROM movies LIMIT 1;")
+            return self.cursor.fetchone()
+        except mysql.connector.Error as error:
+            raise NotImplementedError(f"Failed to retrieve one movie: {error}")
+
     def get_movie_by_id(self, movie_id: int) -> Optional[Dict[str, Any]]:
         try:
             query = "SELECT * FROM movies WHERE id = %s;"
