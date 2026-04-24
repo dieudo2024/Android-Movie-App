@@ -33,8 +33,16 @@ source venv/bin/activate
 ### 4. Install backend dependencies
 
 ```bash
-pip install fastapi uvicorn mysql-connector-python
+pip install -r requirements.txt
 ```
+
+Current dependencies in `backend/requirements.txt`:
+
+- fastapi
+- uvicorn
+- mysql-connector-python
+- pydantic
+- pandas
 
 ### 5. Run the API server
 
