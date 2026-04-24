@@ -1,12 +1,15 @@
 
 CREATE DATABASE IF NOT EXISTS movie_db;
-CREATE TABLE IF NOT EXISTS movie_db.movie (
+USE movie_db;
+
+CREATE TABLE IF NOT EXISTS movies (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     category VARCHAR(100) NOT NULL,
     director VARCHAR(255) NOT NULL,
     year INT NOT NULL,
     rating FLOAT NOT NULL CHECK (rating >= 0.0 AND rating <= 10.0),
-    synopsis VARCHAR(255) NOT NULL,
+    description TEXT, -- Added to match your insert data
+    synopsis TEXT,    -- Kept as requested
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
