@@ -32,9 +32,6 @@ movie_db = MovieDatabase(
 
 movie_db.create_table()
 
-@app.get("/")
-def read_root():
-    return "Welcome to the Movie API!"
 # This endpoint retrieves a paginated list of movies with optional filters
 # Eg GET /movies?page=2&page_size=5
 
@@ -66,13 +63,6 @@ def list_movies(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve movies: {e}")
-
-@app.get("/movies/one")
-def get_one_movie():
-    try:
-        return movie_db.get_one_movie()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve one movie: {e}")
 
 @app.get("/movies/{movie_id}")
 def get_movie_by_id(movie_id: int):
