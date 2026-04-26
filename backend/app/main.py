@@ -1,10 +1,9 @@
 from . import config
 
 from fastapi import FastAPI
+from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from .movie_db import MovieDatabase
-
-from app.db import ensure_schema_exists
 
 app = FastAPI(title="Movie API", description="A simple API built with FastAPI")
 
@@ -20,14 +19,7 @@ class Movie(BaseModel):
     description: str
     created_at: str
 
-ensure_schema_exists(config.DB_NAME)
-
-movie_db = MovieDatabase(
-    host=config.DB_HOST,
-    user=config.DB_USER,
-    password=config.DB_PASSWORD,
-    database=config.DB_NAME,
-)
+movie_db = MovieDatabase(database=config.DB_NAME)
 
 movie_db.create_table()
 
@@ -40,5 +32,5 @@ def list_movies():
     try:
         return movie_db.get_all_movies()
     except Exception as e:
-        raise NotImplementedError(f"Failed to retrieve movies: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve movies: {e}")
 
