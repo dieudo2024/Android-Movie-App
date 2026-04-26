@@ -4,8 +4,6 @@ from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
 from .movie_db import MovieDatabase
 
-from app.db import ensure_schema_exists
-
 app = FastAPI(title="Movie API", description="A simple API built with FastAPI")
 
 def home():
@@ -21,14 +19,7 @@ class Movie(BaseModel):
     synopsis: str | None = None
     created_at: str | None = None
 
-ensure_schema_exists(config.DB_NAME)
-
-movie_db = MovieDatabase(
-    host=config.DB_HOST,
-    user=config.DB_USER,
-    password=config.DB_PASSWORD,
-    database=config.DB_NAME,
-)
+movie_db = MovieDatabase(database=config.DB_NAME)
 
 movie_db.create_table()
 
