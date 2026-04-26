@@ -23,7 +23,7 @@ class MovieDatabase:
             sql = """
             CREATE TABLE IF NOT EXISTS movies (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                title VARCHAR(255) NOT NULL,
+                title VARCHAR(255) NOT NULL UNIQUE,
                 category VARCHAR(255) NOT NULL,
                 director VARCHAR(255) NOT NULL,
                 year INT NOT NULL,
