@@ -1,6 +1,6 @@
 # DBA-W2026-Group7
 
-## Backend Setup (FastAPI)
+## A. Backend Setup (FastAPI)
 
 These steps run the backend in the existing `backend` folder for this project.
 
@@ -43,16 +43,39 @@ Current dependencies in `backend/requirements.txt`:
 - mysql-connector-python
 - pydantic
 - pandas
+- python-dotenv
 
-### 5. Run the API server
+### 5. Create your environment file
+
+From inside `backend`, copy the example and update values as needed:
+
+```bash
+copy .env.example .env
+```
+
+On macOS/Linux:
+
+```bash
+cp .env.example .env
+```
+
+Default variables used by the backend:
+
+- DB_HOST
+- DB_USER
+- DB_PASSWORD
+- DB_NAME
+- DB_PORT
+
+### 6. Run the API server
 
 From inside `backend`:
 
 ```bash
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 ```
 
-### 6. Verify it is running
+### 7. Verify it is running
 
 - API root: http://127.0.0.1:8000/
 - Swagger docs: http://127.0.0.1:8000/docs
@@ -63,6 +86,6 @@ You should see:
 {"message":"API is running"}
 ```
 
-### 7. Stop the server
+### 8. Stop the server
 
 Press `Ctrl + C` in the terminal.

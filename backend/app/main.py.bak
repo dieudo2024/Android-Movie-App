@@ -1,10 +1,13 @@
 from . import config
 
+<<<<<<< HEAD
 from fastapi import FastAPI, HTTPException, Query
+=======
+from fastapi import FastAPI
+from fastapi import HTTPException
+>>>>>>> feature/db-models
 from pydantic import BaseModel, Field
 from .movie_db import MovieDatabase
-
-from app.db import ensure_schema_exists
 
 app = FastAPI(title="Movie API", description="A simple API built with FastAPI")
 
@@ -21,14 +24,7 @@ class Movie(BaseModel):
     synopsis: str | None = None
     created_at: str | None = None
 
-ensure_schema_exists(config.DB_NAME)
-
-movie_db = MovieDatabase(
-    host=config.DB_HOST,
-    user=config.DB_USER,
-    password=config.DB_PASSWORD,
-    database=config.DB_NAME,
-)
+movie_db = MovieDatabase(database=config.DB_NAME)
 
 movie_db.create_table()
 
@@ -36,6 +32,7 @@ movie_db.create_table()
 # Eg GET /movies?page=2&page_size=5
 
 @app.get("/movies")
+<<<<<<< HEAD
 def list_movies(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=10, ge=1, le=100),
@@ -50,6 +47,13 @@ def list_movies(
             status_code=400,
             detail="min_rating cannot be greater than max_rating",
         )
+=======
+def list_movies():
+    try:
+        return movie_db.get_all_movies()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve movies: {e}")
+>>>>>>> feature/db-models
 
     try:
         return movie_db.get_all_movies(

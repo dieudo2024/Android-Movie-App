@@ -1,7 +1,7 @@
 import mysql.connector
 from mysql.connector import Error
-#from app.db import connect
-# from app.config import DB_NAME
+from app.db import connect
+from app.config import DB_NAME
 
 def seed_database():
     """
