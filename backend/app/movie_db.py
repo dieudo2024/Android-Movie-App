@@ -1,22 +1,21 @@
 import mysql.connector
 from typing import Any, Dict, List, Optional, Sequence
+from .db import connect, ensure_schema_exists, DatabaseError
 
 class MovieDatabase:
-    def __init__(self, host: str, user: str, password: str, database: str):
+    def __init__(self, database: str):
+        if not database:
+            raise ValueError("database is required")
+
         try:
-            self.connection = mysql.connector.connect(
-                host=host,
-                user=user,
-                password=password,
-                database=database
-            )
+            self.connection = connect(database=None, include_database=False)
             self.cursor = self.connection.cursor(dictionary=True)
 
-            self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database};")
-            self.cursor.execute(f"USE {database};")
+            ensure_schema_exists(database)
+            self.cursor.execute(f"USE `{database}`;")
             
-        except mysql.connector.Error as error:
-            raise NotImplementedError(f"Failed to connect to database: {error}")
+        except (mysql.connector.Error, DatabaseError) as error:
+            raise DatabaseError(f"Failed to connect to database: {error}") from error
 
     def create_table(self) -> None:
         try:
@@ -39,9 +38,11 @@ class MovieDatabase:
         
         except mysql.connector.Error as error:
             print(f"Error creating movies table: {error}")
-            raise NotImplementedError(f"Failed to create movies table: {error}")
+            raise DatabaseError(f"Failed to create movies table: {error}") from error
     
     def insert_movies(self, rows: Sequence[Dict[str, Any]]) -> int:
+        if rows is None:
+            raise ValueError("rows cannot be None")
         
         if not rows:
             return 0
@@ -70,7 +71,7 @@ class MovieDatabase:
 
             return self.cursor.rowcount
         except mysql.connector.Error as error:
-            raise NotImplementedError(f"Failed to insert movies: {error}")
+            raise DatabaseError(f"Failed to insert movies: {error}") from error
 
     def get_all_movies(
         self,
@@ -82,6 +83,13 @@ class MovieDatabase:
         min_rating: float | None = None,
         max_rating: float | None = None,
     ) -> Dict[str, Any]:
+        if page < 1:
+            raise ValueError("page must be >= 1")
+        if page_size < 1:
+            raise ValueError("page_size must be >= 1")
+        if min_rating is not None and max_rating is not None and min_rating > max_rating:
+            raise ValueError("min_rating cannot be greater than max_rating")
+
         try:
             where_clauses: List[str] = []
             where_values: List[Any] = []
@@ -127,22 +135,25 @@ class MovieDatabase:
                 "total_pages": total_pages,
             }
         except mysql.connector.Error as error:
-            raise NotImplementedError(f"Failed to retrieve movies: {error}")
+            raise DatabaseError(f"Failed to retrieve movies: {error}") from error
     
     def get_one_movie(self) -> Optional[Dict[str, Any]]:
         try:
             self.cursor.execute("SELECT * FROM movies LIMIT 1;")
             return self.cursor.fetchone()
         except mysql.connector.Error as error:
-            raise NotImplementedError(f"Failed to retrieve one movie: {error}")
+            raise DatabaseError(f"Failed to retrieve one movie: {error}")
 
     def get_movie_by_id(self, movie_id: int) -> Optional[Dict[str, Any]]:
+        if movie_id < 1:
+            raise ValueError("movie_id must be >= 1")
+
         try:
             query = "SELECT * FROM movies WHERE id = %s;"
             self.cursor.execute(query, (movie_id,))
             return self.cursor.fetchone()
         except mysql.connector.Error as error:
-            raise NotImplementedError(f"Failed to retrieve movie by ID: {error}")
+            raise DatabaseError(f"Failed to retrieve movie by ID: {error}") from error
         
     def close(self) -> None:
         try:
@@ -151,5 +162,5 @@ class MovieDatabase:
             if self.connection:
                 self.connection.close()
         except mysql.connector.Error as error:
-            raise NotImplementedError(f"Failed to close database connection: {error}")
+            raise DatabaseError(f"Failed to close database connection: {error}") from error
         

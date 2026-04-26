@@ -24,7 +24,17 @@ def connect(database: Optional[str] = None, include_database: bool = True):
         connection_config["database"] = database or config.DB_NAME
 
     try:
+<<<<<<< HEAD
+        connection = mysql.connector.connect(
+            host=config.DB_HOST,
+            user=config.DB_USER,
+            password=config.DB_PASSWORD,
+            database=config.DB_NAME,
+            port=config.DB_PORT,
+        )
+=======
         connection = mysql.connector.connect(**connection_config)
+>>>>>>> feature/db-models
         return connection
     except mysql.connector.Error as error:
         raise DatabaseError(f"Failed to connect to database: {error}") from error
