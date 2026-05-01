@@ -1,4 +1,5 @@
 import mysql.connector
+import pandas as pd
 from typing import Any, Dict, List, Optional, Sequence
 from .db import connect, ensure_schema_exists, DatabaseError
 
@@ -205,6 +206,46 @@ class MovieDatabase:
             return self.cursor.rowcount
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to delete movie: {error}") from error
+
+    def get_stats(self) -> Dict[str, Any]:
+        try:
+            self.cursor.execute("SELECT * FROM movies;")
+            rows = self.cursor.fetchall()
+            df = pd.DataFrame(rows)
+
+            if df.empty:
+                return {
+                    "total_movies": 0,
+                    "avg_rating": 0.0,
+                    "min_rating": 0.0,
+                    "max_rating": 0.0,
+                    "avg_year": 0.0,
+                    "oldest_year": None,
+                    "newest_year": None,
+                    "movies_by_category": {},
+                    "avg_rating_by_category": {},
+                }
+
+            movies_by_category = (
+                df["category"].value_counts().sort_index().astype(int).to_dict()
+            )
+            avg_rating_by_category = (
+                df.groupby("category")["rating"].mean().round(2).to_dict()
+            )
+
+            return {
+                "total_movies": int(len(df)),
+                "avg_rating": float(df["rating"].mean().round(2)),
+                "min_rating": float(df["rating"].min()),
+                "max_rating": float(df["rating"].max()),
+                "avg_year": float(df["year"].mean().round(2)),
+                "oldest_year": int(df["year"].min()),
+                "newest_year": int(df["year"].max()),
+                "movies_by_category": movies_by_category,
+                "avg_rating_by_category": avg_rating_by_category,
+            }
+        except mysql.connector.Error as error:
+            raise DatabaseError(f"Failed to retrieve stats: {error}") from error
         
     def close(self) -> None:
         try:

@@ -107,3 +107,10 @@ def delete_movie(id: int):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete movie: {e}")
+
+@app.get("/stats")
+def get_stats():
+    try:
+        return movie_db.get_stats()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve stats: {e}")
