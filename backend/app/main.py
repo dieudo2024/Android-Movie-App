@@ -31,6 +31,7 @@ def list_movies(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=10, ge=1, le=100),
     category: str | None = None,
+    title: str | None = None,
     director: str | None = None,
     year: int | None = None,
     min_rating: float | None = Query(default=None, ge=0.0, le=10.0),
@@ -47,6 +48,7 @@ def list_movies(
             page=page,
             page_size=page_size,
             category=category,
+            title=title,
             director=director,
             year=year,
             min_rating=min_rating,
@@ -105,3 +107,10 @@ def delete_movie(id: int):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete movie: {e}")
+
+@app.get("/stats")
+def get_stats():
+    try:
+        return movie_db.get_stats()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve stats: {e}")

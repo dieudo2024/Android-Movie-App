@@ -1,4 +1,5 @@
 import mysql.connector
+import pandas as pd
 from typing import Any, Dict, List, Optional, Sequence
 from .db import connect, ensure_schema_exists, DatabaseError
 
@@ -78,6 +79,7 @@ class MovieDatabase:
         page: int = 1,
         page_size: int = 10,
         category: str | None = None,
+        title: str | None = None,
         director: str | None = None,
         year: int | None = None,
         min_rating: float | None = None,
@@ -97,6 +99,9 @@ class MovieDatabase:
             if category:
                 where_clauses.append("category = %s")
                 where_values.append(category)
+            if title:
+                where_clauses.append("LOWER(title) LIKE %s")
+                where_values.append(f"%{title.lower()}%")
             if director:
                 where_clauses.append("director = %s")
                 where_values.append(director)
@@ -201,6 +206,46 @@ class MovieDatabase:
             return self.cursor.rowcount
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to delete movie: {error}") from error
+
+    def get_stats(self) -> Dict[str, Any]:
+        try:
+            self.cursor.execute("SELECT * FROM movies;")
+            rows = self.cursor.fetchall()
+            df = pd.DataFrame(rows)
+
+            if df.empty:
+                return {
+                    "total_movies": 0,
+                    "avg_rating": 0.0,
+                    "min_rating": 0.0,
+                    "max_rating": 0.0,
+                    "avg_year": 0.0,
+                    "oldest_year": None,
+                    "newest_year": None,
+                    "movies_by_category": {},
+                    "avg_rating_by_category": {},
+                }
+
+            movies_by_category = (
+                df["category"].value_counts().sort_index().astype(int).to_dict()
+            )
+            avg_rating_by_category = (
+                df.groupby("category")["rating"].mean().round(2).to_dict()
+            )
+
+            return {
+                "total_movies": int(len(df)),
+                "avg_rating": float(df["rating"].mean().round(2)),
+                "min_rating": float(df["rating"].min()),
+                "max_rating": float(df["rating"].max()),
+                "avg_year": float(df["year"].mean().round(2)),
+                "oldest_year": int(df["year"].min()),
+                "newest_year": int(df["year"].max()),
+                "movies_by_category": movies_by_category,
+                "avg_rating_by_category": avg_rating_by_category,
+            }
+        except mysql.connector.Error as error:
+            raise DatabaseError(f"Failed to retrieve stats: {error}") from error
         
     def close(self) -> None:
         try:
