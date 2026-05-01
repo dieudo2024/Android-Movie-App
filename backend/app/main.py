@@ -74,3 +74,34 @@ def add_movie(movie: Movie):
         return {"message": "Movie added successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to add movie: {e}")
+
+@app.put("/movies/{id}")
+def update_movie(id: int, movie: Movie):
+    try:
+        existing = movie_db.get_movie_by_id(id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="Movie not found")
+
+        movie_db.update_movie(
+            id,
+            movie.model_dump(exclude_none=True, exclude={"created_at"}),
+        )
+        return {"message": "Movie updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update movie: {e}")
+
+@app.delete("/movies/{id}")
+def delete_movie(id: int):
+    try:
+        existing = movie_db.get_movie_by_id(id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="Movie not found")
+
+        movie_db.delete_movie(id)
+        return {"message": "Movie deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete movie: {e}")

@@ -154,6 +154,53 @@ class MovieDatabase:
             return self.cursor.fetchone()
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to retrieve movie by ID: {error}") from error
+
+    def update_movie(self, movie_id: int, row: Dict[str, Any]) -> None:
+        if movie_id < 1:
+            raise ValueError("movie_id must be >= 1")
+        if row is None:
+            raise ValueError("row cannot be None")
+
+        try:
+            sql = """
+            UPDATE movies
+            SET title = %s,
+                category = %s,
+                director = %s,
+                year = %s,
+                rating = %s,
+                description = %s,
+                synopsis = %s
+            WHERE id = %s;
+            """
+
+            values = (
+                row["title"],
+                row["category"],
+                row["director"],
+                row["year"],
+                row["rating"],
+                row.get("description"),
+                row.get("synopsis") or "",
+                movie_id,
+            )
+
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+        except mysql.connector.Error as error:
+            raise DatabaseError(f"Failed to update movie: {error}") from error
+
+    def delete_movie(self, movie_id: int) -> int:
+        if movie_id < 1:
+            raise ValueError("movie_id must be >= 1")
+
+        try:
+            sql = "DELETE FROM movies WHERE id = %s;"
+            self.cursor.execute(sql, (movie_id,))
+            self.connection.commit()
+            return self.cursor.rowcount
+        except mysql.connector.Error as error:
+            raise DatabaseError(f"Failed to delete movie: {error}") from error
         
     def close(self) -> None:
         try:
