@@ -189,6 +189,18 @@ class MovieDatabase:
             self.connection.commit()
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to update movie: {error}") from error
+
+    def delete_movie(self, movie_id: int) -> int:
+        if movie_id < 1:
+            raise ValueError("movie_id must be >= 1")
+
+        try:
+            sql = "DELETE FROM movies WHERE id = %s;"
+            self.cursor.execute(sql, (movie_id,))
+            self.connection.commit()
+            return self.cursor.rowcount
+        except mysql.connector.Error as error:
+            raise DatabaseError(f"Failed to delete movie: {error}") from error
         
     def close(self) -> None:
         try:
