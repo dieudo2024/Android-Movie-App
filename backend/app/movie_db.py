@@ -78,6 +78,7 @@ class MovieDatabase:
         page: int = 1,
         page_size: int = 10,
         category: str | None = None,
+        title: str | None = None,
         director: str | None = None,
         year: int | None = None,
         min_rating: float | None = None,
@@ -97,6 +98,9 @@ class MovieDatabase:
             if category:
                 where_clauses.append("category = %s")
                 where_values.append(category)
+            if title:
+                where_clauses.append("LOWER(title) LIKE %s")
+                where_values.append(f"%{title.lower()}%")
             if director:
                 where_clauses.append("director = %s")
                 where_values.append(director)
