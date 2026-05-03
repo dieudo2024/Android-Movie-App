@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../movie.dart';
+import 'movie.dart';
 
 class ApiService {
   static const String baseUrl = 'http://localhost:8000';
