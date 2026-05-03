@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'movie.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = 'http://10.0.2.2:8000';
 
   Future<List<Movie>> fetchMovies({String? search, String? category}) async {
     // Building the query to get movies
