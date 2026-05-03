@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'movie.dart';
 import 'api_service.dart';
-// import 'detail_screen.dart';
+import 'detail_screen.dart';
 
 class BrowseScreen extends StatefulWidget {
   @override
