@@ -49,3 +49,18 @@ class DetailScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildInfoSection(String title, String content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        const SizedBox(height: 4),
+        Text(content, style: const TextStyle(fontSize: 16)),
+      ],
+    );
+  }
+}
