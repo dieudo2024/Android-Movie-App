@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'movie.dart';
 import 'api_service.dart';
+// import 'detail_screen.dart';
 
 class BrowseScreen extends StatefulWidget {
   @override
@@ -72,7 +73,13 @@ class _BrowseScreenState extends State<BrowseScreen> {
                         subtitle: Text("${movie.category} • ${movie.year}"),
                         trailing: Text("⭐ ${movie.rating}"),
                         onTap: () {
-                          // TODO: Navigate to Detail Screen
+                          // 2. ADD THE NAVIGATION HERE
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DetailScreen(movie: movie),
+                            ),
+                          );
                         },
                       ),
                     );
