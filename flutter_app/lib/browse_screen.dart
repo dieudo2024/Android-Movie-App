@@ -73,7 +73,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
                         subtitle: Text("${movie.category} • ${movie.year}"),
                         trailing: Text("⭐ ${movie.rating}"),
                         onTap: () {
-                          // 2. ADD THE NAVIGATION HERE
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -89,6 +88,16 @@ class _BrowseScreenState extends State<BrowseScreen> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.pushNamed(context, '/add');
+          if (result == true) {
+            _refreshList();
+          }
+        },
+        child: Icon(Icons.add),
+        tooltip: 'Add Movie',
       ),
     );
   }

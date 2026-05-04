@@ -21,4 +21,24 @@ class ApiService {
       throw Exception('Failed to fetch movies');
     }
   }
+  
+    Future<void> addMovie(Movie movie) async {
+      final url = Uri.parse('$baseUrl/movies');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'title': movie.title,
+          'category': movie.category,
+          'director': movie.director,
+          'year': movie.year,
+          'rating': movie.rating,
+          'description': movie.description,
+          'synopsis': movie.synopsis,
+        }),
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to add movie: \\n' + response.body);
+      }
+    }
 }

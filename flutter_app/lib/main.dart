@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'browse_screen.dart';
-
+import 'add_movie_screen.dart';
 void main() {
   runApp(const MovieCatalogApp());
 }
@@ -18,6 +18,9 @@ class MovieCatalogApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: BrowseScreen(),
+      routes: {
+        '/add': (context) => AddMovieScreen(),
+      },
     );
   }
 }
