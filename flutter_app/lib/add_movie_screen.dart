@@ -77,7 +77,7 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
                 controller: _titleController,
                 decoration: InputDecoration(labelText: 'Title'),
                 validator: (value) => value!.isEmpty ? 'Enter a title' : null,
-                onSaved: (value) => title = value!,
+                // onSaved: (value) => title = value!,
               ),
               TextFormField(
                 controller: _categoryController,
@@ -88,7 +88,7 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
                 controller: _directorController,
                 decoration: InputDecoration(labelText: 'Director'),
                 validator: (value) => value!.isEmpty ? 'Enter a director' : null,
-                onSaved: (value) => director = value!,
+                // onSaved: (value) => director = value!,
               ),
               TextFormField(
                 controller: _yearController,
@@ -129,7 +129,7 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
                 child: _isSubmitting ? CircularProgressIndicator() : Text('Add Movie'),
               ),
               SizedBox(height: 20),
-              ElevatedButton(onPressed: _submitForm, child: Text("Save Movie")),
+              // ElevatedButton(onPressed: _submitForm, child: Text("Save Movie")),
             ],
           ),
         ),
