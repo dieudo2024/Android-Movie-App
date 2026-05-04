@@ -30,6 +30,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
     'Drama',
     'Comedy',
     'Horror',
+    'Mystery',
+    'Thriller',
   ];
 
   @override
