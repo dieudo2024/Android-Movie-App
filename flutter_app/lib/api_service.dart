@@ -24,14 +24,15 @@ class PagedMovies {
           .map((item) => Movie.fromJson(item as Map<String, dynamic>))
           .toList(),
       page: json['page'] ?? 1,
-      pageSize: json['page_size'] ?? itemsJson.length,
-      total: json['total'] ?? itemsJson.length,
+      pageSize: json['page_size'] ?? 10, // Default to 10 if missing
+      total: json['total'] ?? 0,
       totalPages: json['total_pages'] ?? 1,
     );
   }
 }
 
 class ApiService {
+  // 10.0.2.2 is the correct alias for localhost on the Android Emulator
   static const String baseUrl = 'http://10.0.2.2:8000';
 
   Future<PagedMovies> fetchMovies({
@@ -40,32 +41,48 @@ class ApiService {
     int page = 1,
     int pageSize = 10,
   }) async {
-    final queryParameters = <String, String>{};
-    if (search != null && search.isNotEmpty) queryParameters['title'] = search;
-    if (category != null && category.isNotEmpty) queryParameters['category'] = category;
-    queryParameters['page'] = page.toString();
-    queryParameters['page_size'] = pageSize.toString();
+    // Build query parameters safely
+    final queryParameters = <String, String>{
+      'page': page.toString(),
+      'page_size': pageSize.toString(),
+    };
+
+    if (search != null && search.isNotEmpty) {
+      queryParameters['title'] = search;
+    }
+    if (category != null && category.isNotEmpty) {
+      queryParameters['category'] = category;
+    }
 
     final uri = Uri.parse('$baseUrl/movies').replace(queryParameters: queryParameters);
 
-    final response = await http.get(uri);
+    try {
+      final response = await http.get(uri);
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      return PagedMovies.fromJson(data);
-    } else {
-      throw Exception('Failed to fetch movies: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        return PagedMovies.fromJson(data);
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Connection failed: $e');
     }
   }
   
   Future<bool> addMovie(Movie movie) async {
     final url = Uri.parse('$baseUrl/movies');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(movie.toJson()),
-    );
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(movie.toJson()),
+      );
 
-    return response.statusCode == 200 || response.statusCode == 201;
+      // Returns true if created (201) or success (200)
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      return false;
+    }
   }
 }
