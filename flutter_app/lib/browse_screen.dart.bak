@@ -120,6 +120,11 @@ class _BrowseScreenState extends State<BrowseScreen> {
           ),
         ],
       ),
+<<<<<<< HEAD
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.pushNamed(context, '/add');
+=======
       
       // Floating Action Button to navigate to the Add Form[cite: 1]
       floatingActionButton: FloatingActionButton(
@@ -132,12 +137,16 @@ class _BrowseScreenState extends State<BrowseScreen> {
           );
           
           // If a movie was added successfully, refresh the list[cite: 1]
+>>>>>>> main
           if (result == true) {
             _refreshList();
           }
         },
+<<<<<<< HEAD
         child: Icon(Icons.add),
         tooltip: 'Add Movie',
+=======
+>>>>>>> main
       ),
     );
   }
