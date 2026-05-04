@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'movie.dart';
 import 'api_service.dart';
 import 'detail_screen.dart';
-import 'add_movie_screen.dart'; // Ensure you create this file for the form
+import 'add_movie_screen.dart'; // Ensure this file exists in your project
 
 class BrowseScreen extends StatefulWidget {
   @override
@@ -15,7 +15,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
   String searchQuery = "";
   String? selectedCategory;
 
-  // List of categories for the filter[cite: 5, 8]
+  // List of categories for the filter
   final List<String> categories = ['All', 'Sci-Fi', 'Action', 'Drama', 'Comedy', 'Horror'];
 
   @override
@@ -26,7 +26,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
 
   void _refreshList() {
     setState(() {
-      // Pass null if 'All' is selected to fetch everything from the API[cite: 8, 9]
+      // Pass null if 'All' is selected to fetch all movies from the API
       futureMovies = apiService.fetchMovies(
         search: searchQuery.isEmpty ? null : searchQuery,
         category: (selectedCategory == 'All') ? null : selectedCategory,
@@ -37,10 +37,12 @@ class _BrowseScreenState extends State<BrowseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Movie Catalog')),
+      appBar: AppBar(
+        title: Text('Movie Catalog'),
+      ),
       body: Column(
         children: [
-          // Search Bar
+          // 1. Search Bar Requirement
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
             child: TextField(
@@ -56,7 +58,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
             ),
           ),
 
-          // Category Filter (Dropdown)
+          // 2. Category Filter Requirement
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
             child: DropdownButtonFormField<String>(
@@ -80,7 +82,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
             ),
           ),
 
-          // List of items[cite: 1, 5]
+          // 3. Browse List Requirement (Item Cards)
           Expanded(
             child: FutureBuilder<List<Movie>>(
               future: futureMovies,
@@ -103,6 +105,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                         title: Text(movie.title, style: TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text("${movie.category} • ${movie.year}"),
                         trailing: Text("⭐ ${movie.rating}"),
+                        // 4. Navigation to Detail Screen Requirement
                         onTap: () {
                           Navigator.push(
                             context,
@@ -121,17 +124,17 @@ class _BrowseScreenState extends State<BrowseScreen> {
         ],
       ),
       
-      // Floating Action Button to navigate to the Add Form[cite: 1]
+      // 5. Navigation to Add Item Form Requirement
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () async {
-          // Navigating to the add screen and waiting for a result[cite: 1]
+          // Navigating to the add screen and waiting for a result
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddMovieScreen()),
           );
           
-          // If a movie was added successfully, refresh the list[cite: 1]
+          // Refresh the list if a new movie was successfully POSTed
           if (result == true) {
             _refreshList();
           }
