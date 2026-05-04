@@ -8,18 +8,21 @@ class MovieDatabase:
         if not database:
             raise ValueError("database is required")
 
+        self.database = database
         try:
-            self.connection = connect(database=None, include_database=False)
-            self.cursor = self.connection.cursor(dictionary=True)
-
             ensure_schema_exists(database)
-            self.cursor.execute(f"USE `{database}`;")
-            
         except (mysql.connector.Error, DatabaseError) as error:
             raise DatabaseError(f"Failed to connect to database: {error}") from error
 
+    def _get_connection(self):
+        return connect(database=self.database)
+
     def create_table(self) -> None:
+        connection = None
+        cursor = None
         try:
+            connection = self._get_connection()
+            cursor = connection.cursor(dictionary=True)
             sql = """
             CREATE TABLE IF NOT EXISTS movies (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -34,12 +37,17 @@ class MovieDatabase:
             );
             """
 
-            self.cursor.execute(sql)
-            self.connection.commit()
+            cursor.execute(sql)
+            connection.commit()
         
         except mysql.connector.Error as error:
             print(f"Error creating movies table: {error}")
             raise DatabaseError(f"Failed to create movies table: {error}") from error
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
     
     def insert_movies(self, rows: Sequence[Dict[str, Any]]) -> int:
         if rows is None:
@@ -47,8 +55,12 @@ class MovieDatabase:
         
         if not rows:
             return 0
-        
+
+        connection = None
+        cursor = None
         try:
+            connection = self._get_connection()
+            cursor = connection.cursor(dictionary=True)
             sql = """
             INSERT INTO movies (title, category, director, year, rating, description, synopsis)
             VALUES (%s, %s, %s, %s, %s, %s, %s);
@@ -67,12 +79,17 @@ class MovieDatabase:
                 for row in rows
             ]
 
-            self.cursor.executemany(sql, values)
-            self.connection.commit()
+            cursor.executemany(sql, values)
+            connection.commit()
 
-            return self.cursor.rowcount
+            return cursor.rowcount
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to insert movies: {error}") from error
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
 
     def get_all_movies(
         self,
@@ -92,7 +109,11 @@ class MovieDatabase:
         if min_rating is not None and max_rating is not None and min_rating > max_rating:
             raise ValueError("min_rating cannot be greater than max_rating")
 
+        connection = None
+        cursor = None
         try:
+            connection = self._get_connection()
+            cursor = connection.cursor(dictionary=True)
             where_clauses: List[str] = []
             where_values: List[Any] = []
 
@@ -122,13 +143,13 @@ class MovieDatabase:
             offset = (page - 1) * page_size
 
             count_sql = f"SELECT COUNT(*) AS total FROM movies{where_sql};"
-            self.cursor.execute(count_sql, tuple(where_values))
-            total = int(self.cursor.fetchone()["total"])
+            cursor.execute(count_sql, tuple(where_values))
+            total = int(cursor.fetchone()["total"])
 
             data_sql = f"SELECT * FROM movies{where_sql} ORDER BY id DESC LIMIT %s OFFSET %s;"
             data_values = [*where_values, page_size, offset]
-            self.cursor.execute(data_sql, tuple(data_values))
-            movies = self.cursor.fetchall()
+            cursor.execute(data_sql, tuple(data_values))
+            movies = cursor.fetchall()
 
             total_pages = (total + page_size - 1) // page_size if total else 0
 
@@ -141,24 +162,47 @@ class MovieDatabase:
             }
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to retrieve movies: {error}") from error
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
     
     def get_one_movie(self) -> Optional[Dict[str, Any]]:
+        connection = None
+        cursor = None
         try:
-            self.cursor.execute("SELECT * FROM movies LIMIT 1;")
-            return self.cursor.fetchone()
+            connection = self._get_connection()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM movies LIMIT 1;")
+            return cursor.fetchone()
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to retrieve one movie: {error}")
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
 
     def get_movie_by_id(self, movie_id: int) -> Optional[Dict[str, Any]]:
         if movie_id < 1:
             raise ValueError("movie_id must be >= 1")
 
+        connection = None
+        cursor = None
         try:
+            connection = self._get_connection()
+            cursor = connection.cursor(dictionary=True)
             query = "SELECT * FROM movies WHERE id = %s;"
-            self.cursor.execute(query, (movie_id,))
-            return self.cursor.fetchone()
+            cursor.execute(query, (movie_id,))
+            return cursor.fetchone()
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to retrieve movie by ID: {error}") from error
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
 
     def update_movie(self, movie_id: int, row: Dict[str, Any]) -> None:
         if movie_id < 1:
@@ -166,7 +210,11 @@ class MovieDatabase:
         if row is None:
             raise ValueError("row cannot be None")
 
+        connection = None
+        cursor = None
         try:
+            connection = self._get_connection()
+            cursor = connection.cursor(dictionary=True)
             sql = """
             UPDATE movies
             SET title = %s,
@@ -190,27 +238,45 @@ class MovieDatabase:
                 movie_id,
             )
 
-            self.cursor.execute(sql, values)
-            self.connection.commit()
+            cursor.execute(sql, values)
+            connection.commit()
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to update movie: {error}") from error
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
 
     def delete_movie(self, movie_id: int) -> int:
         if movie_id < 1:
             raise ValueError("movie_id must be >= 1")
 
+        connection = None
+        cursor = None
         try:
+            connection = self._get_connection()
+            cursor = connection.cursor(dictionary=True)
             sql = "DELETE FROM movies WHERE id = %s;"
-            self.cursor.execute(sql, (movie_id,))
-            self.connection.commit()
-            return self.cursor.rowcount
+            cursor.execute(sql, (movie_id,))
+            connection.commit()
+            return cursor.rowcount
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to delete movie: {error}") from error
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
 
     def get_stats(self) -> Dict[str, Any]:
+        connection = None
+        cursor = None
         try:
-            self.cursor.execute("SELECT * FROM movies;")
-            rows = self.cursor.fetchall()
+            connection = self._get_connection()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM movies;")
+            rows = cursor.fetchall()
             df = pd.DataFrame(rows)
 
             if df.empty:
@@ -246,13 +312,12 @@ class MovieDatabase:
             }
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to retrieve stats: {error}") from error
-        
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
+
     def close(self) -> None:
-        try:
-            if self.cursor:
-                self.cursor.close()
-            if self.connection:
-                self.connection.close()
-        except mysql.connector.Error as error:
-            raise DatabaseError(f"Failed to close database connection: {error}") from error
+        return None
         
