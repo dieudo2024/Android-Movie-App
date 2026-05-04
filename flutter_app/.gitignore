@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/.gradle
+
+/android/.gradle/8.14/executionHistory/executionHistory.lock
+/android/.gradle/8.14/executionHistory/executionHistory.bin
+/android/.gradle/8.14/fileHashes

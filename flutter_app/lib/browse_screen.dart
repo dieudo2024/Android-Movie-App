@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'movie.dart';
 import 'api_service.dart';
 import 'detail_screen.dart';
-import 'add_movie_screen.dart'; // Ensure this file exists in your project
+import 'add_movie_screen.dart';
 
 class BrowseScreen extends StatefulWidget {
   @override
@@ -11,27 +11,98 @@ class BrowseScreen extends StatefulWidget {
 
 class _BrowseScreenState extends State<BrowseScreen> {
   final ApiService apiService = ApiService();
-  late Future<List<Movie>> futureMovies;
+  final ScrollController _scrollController = ScrollController();
+  final List<Movie> _movies = [];
+  bool _isLoading = false;
+  bool _isInitialLoading = true;
+  bool _hasMore = true;
+  int _currentPage = 1;
+  int _totalPages = 1;
+  final int _pageSize = 10;
+  String? _errorMessage;
   String searchQuery = "";
   String? selectedCategory;
 
-  // List of categories for the filter
-  final List<String> categories = ['All', 'Sci-Fi', 'Action', 'Drama', 'Comedy', 'Horror'];
+  final List<String> categories = [
+    'All',
+    'Sci-Fi',
+    'Action',
+    'Drama',
+    'Comedy',
+    'Horror',
+  ];
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _refreshList();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMovies();
+    }
   }
 
   void _refreshList() {
     setState(() {
-      // Pass null if 'All' is selected to fetch all movies from the API
-      futureMovies = apiService.fetchMovies(
+      _movies.clear();
+      _currentPage = 1;
+      _totalPages = 1;
+      _hasMore = true;
+      _isInitialLoading = true;
+      _errorMessage = null;
+    });
+    _loadMovies();
+  }
+
+  Future<void> _loadMovies() async {
+    if (_isLoading || !_hasMore) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await apiService.fetchMovies(
         search: searchQuery.isEmpty ? null : searchQuery,
         category: (selectedCategory == 'All') ? null : selectedCategory,
+        page: _currentPage,
+        pageSize: _pageSize,
       );
-    });
+
+      if (!mounted) return;
+
+      final nextPage = response.page + 1;
+      final hasMore = response.totalPages > 0 && nextPage <= response.totalPages;
+
+      setState(() {
+        _movies.addAll(response.items);
+        _totalPages = response.totalPages;
+        _currentPage = nextPage;
+        _hasMore = hasMore;
+        _isLoading = false;
+        _isInitialLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+        _isInitialLoading = false;
+        _hasMore = false;
+      });
+    }
   }
 
   @override
@@ -42,7 +113,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
       ),
       body: Column(
         children: [
-          // 1. Search Bar Requirement
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
             child: TextField(
@@ -57,8 +127,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
               },
             ),
           ),
-
-          // 2. Category Filter Requirement
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
             child: DropdownButtonFormField<String>(
@@ -74,71 +142,67 @@ class _BrowseScreenState extends State<BrowseScreen> {
                 );
               }).toList(),
               onChanged: (newValue) {
-                setState(() {
-                  selectedCategory = newValue;
-                  _refreshList();
-                });
+                selectedCategory = newValue;
+                _refreshList();
               },
             ),
           ),
-
-          // 3. Browse List Requirement (Item Cards)
           Expanded(
-            child: FutureBuilder<List<Movie>>(
-              future: futureMovies,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text("No movies found."));
-                }
+            child: _isInitialLoading
+                ? Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                    ? Center(child: Text("Error: $_errorMessage"))
+                    : _movies.isEmpty
+                        ? Center(child: Text("No movies found."))
+                        : ListView.builder(
+                            controller: _scrollController,
+                            itemCount: _movies.length + (_isLoading ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              if (index >= _movies.length) {
+                                return Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  child: Center(child: CircularProgressIndicator()),
+                                );
+                              }
 
-                return ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, index) {
-                    final movie = snapshot.data![index];
-                    return Card(
-                      margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      child: ListTile(
-                        title: Text(movie.title, style: TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text("${movie.category} • ${movie.year}"),
-                        trailing: Text("⭐ ${movie.rating}"),
-                        // 4. Navigation to Detail Screen Requirement
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => DetailScreen(movie: movie),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+                              final movie = _movies[index];
+                              return Card(
+                                margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                child: ListTile(
+                                  title: Text(
+                                    movie.title,
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Text("${movie.category} • ${movie.year}"),
+                                  trailing: Text("⭐ ${movie.rating}"),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => DetailScreen(movie: movie),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
           ),
         ],
       ),
-      
-      // 5. Navigation to Add Item Form Requirement
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () async {
-          // Navigating to the add screen and waiting for a result
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddMovieScreen()),
           );
-          
-          // Refresh the list if a new movie was successfully POSTed
+
           if (result == true) {
             _refreshList();
           }
         },
+        tooltip: 'Add Movie',
       ),
     );
   }

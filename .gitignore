@@ -10,3 +10,5 @@
 /flutter_app/.flutter-plugins
 /flutter_app/.packages
 /flutter_app/.idea
+/flutter_app/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+/flutter_app/android/.gradle/buildOutputCleanup/outputFiles.bin
