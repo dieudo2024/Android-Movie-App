@@ -6,19 +6,33 @@ class ApiService {
   static const String baseUrl = 'http://10.0.2.2:8000';
 
   Future<List<Movie>> fetchMovies({String? search, String? category}) async {
-    // Building the query to get movies
-    String url = '$baseUrl/movies?';
-    if (search != null) url += 'title=$search&';
-    if (category != null) url += 'category=$category';
+    // 1. Better URL building to avoid trailing '&' or '?' issues
+    final queryParameters = <String, String>{};
+    if (search != null && search.isNotEmpty) queryParameters['title'] = search;
+    if (category != null && category.isNotEmpty) queryParameters['category'] = category;
 
-    final response = await http.get(Uri.parse(url));
+    final uri = Uri.parse('$baseUrl/movies').replace(queryParameters: queryParameters);
+
+    final response = await http.get(uri);
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
-      final List<dynamic> items = data['items'];
+      // Ensure 'items' exists and isn't null before mapping
+      final List<dynamic> items = data['items'] ?? [];
       return items.map((json) => Movie.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to fetch movies');
+      throw Exception('Failed to fetch movies: ${response.statusCode}');
     }
+  }
+
+  Future<bool> addMovie(Movie movie) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/movies'),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode(movie.toJson()),
+    );
+
+    // 2. FastAPI usually returns 201 (Created) for successful POST requests
+    return response.statusCode == 200 || response.statusCode == 201; 
   }
 }

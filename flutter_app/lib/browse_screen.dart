@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'movie.dart';
 import 'api_service.dart';
 import 'detail_screen.dart';
+import 'add_movie_screen.dart'; // Ensure you create this file for the form
 
 class BrowseScreen extends StatefulWidget {
   @override
@@ -14,6 +15,9 @@ class _BrowseScreenState extends State<BrowseScreen> {
   String searchQuery = "";
   String? selectedCategory;
 
+  // List of categories for the filter[cite: 5, 8]
+  final List<String> categories = ['All', 'Sci-Fi', 'Action', 'Drama', 'Comedy', 'Horror'];
+
   @override
   void initState() {
     super.initState();
@@ -22,9 +26,10 @@ class _BrowseScreenState extends State<BrowseScreen> {
 
   void _refreshList() {
     setState(() {
+      // Pass null if 'All' is selected to fetch everything from the API[cite: 8, 9]
       futureMovies = apiService.fetchMovies(
         search: searchQuery.isEmpty ? null : searchQuery,
-        category: selectedCategory,
+        category: (selectedCategory == 'All') ? null : selectedCategory,
       );
     });
   }
@@ -37,7 +42,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
         children: [
           // Search Bar
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
             child: TextField(
               decoration: InputDecoration(
                 labelText: 'Search by title',
@@ -50,7 +55,32 @@ class _BrowseScreenState extends State<BrowseScreen> {
               },
             ),
           ),
-          // List of items
+
+          // Category Filter (Dropdown)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+            child: DropdownButtonFormField<String>(
+              value: selectedCategory ?? 'All',
+              decoration: InputDecoration(
+                labelText: 'Filter by Category',
+                border: OutlineInputBorder(),
+              ),
+              items: categories.map((String category) {
+                return DropdownMenuItem(
+                  value: category,
+                  child: Text(category),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  selectedCategory = newValue;
+                  _refreshList();
+                });
+              },
+            ),
+          ),
+
+          // List of items[cite: 1, 5]
           Expanded(
             child: FutureBuilder<List<Movie>>(
               future: futureMovies,
@@ -68,12 +98,12 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   itemBuilder: (context, index) {
                     final movie = snapshot.data![index];
                     return Card(
+                      margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       child: ListTile(
-                        title: Text(movie.title),
+                        title: Text(movie.title, style: TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text("${movie.category} • ${movie.year}"),
                         trailing: Text("⭐ ${movie.rating}"),
                         onTap: () {
-                          // 2. ADD THE NAVIGATION HERE
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -89,6 +119,23 @@ class _BrowseScreenState extends State<BrowseScreen> {
             ),
           ),
         ],
+      ),
+      
+      // Floating Action Button to navigate to the Add Form[cite: 1]
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () async {
+          // Navigating to the add screen and waiting for a result[cite: 1]
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddMovieScreen()),
+          );
+          
+          // If a movie was added successfully, refresh the list[cite: 1]
+          if (result == true) {
+            _refreshList();
+          }
+        },
       ),
     );
   }
