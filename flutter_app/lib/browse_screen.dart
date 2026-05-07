@@ -147,6 +147,13 @@ class _BrowseScreenState extends State<BrowseScreen> {
             },
           ),
           IconButton(
+            icon: const Icon(Icons.favorite, color: Colors.red),
+            tooltip: 'Favorites',
+            onPressed: () {
+              Navigator.pushNamed(context, '/favorites');
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.refresh),
             onPressed: _refreshList,
           )
