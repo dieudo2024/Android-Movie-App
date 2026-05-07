@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'browse_screen.dart';
 import 'stats.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -59,11 +60,11 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 12),
 
               _sectionTitle('Movies by category'),
-              ..._mapToTilesInt(stats.moviesByCategory),
+              ..._mapToTilesInt(context, stats.moviesByCategory),
               const SizedBox(height: 12),
 
               _sectionTitle('Average rating by category'),
-              ..._mapToTilesDouble(stats.avgRatingByCategory),
+              ..._mapToTilesDouble(context, stats.avgRatingByCategory),
             ],
           );
         },
@@ -81,7 +82,16 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoTile(String label, String value) {
+  void _openCategory(BuildContext context, String category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BrowseScreen(initialCategory: category),
+      ),
+    );
+  }
+
+  Widget _infoTile(String label, String value, {VoidCallback? onTap}) {
     return Card(
       elevation: 1,
       child: ListTile(
@@ -90,11 +100,12 @@ class DashboardScreen extends StatelessWidget {
           value,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
+        onTap: onTap,
       ),
     );
   }
 
-  List<Widget> _mapToTilesInt(Map<String, int> map) {
+  List<Widget> _mapToTilesInt(BuildContext context, Map<String, int> map) {
     if (map.isEmpty) {
       return [const Text('No category data.')];
     }
@@ -103,11 +114,17 @@ class DashboardScreen extends StatelessWidget {
       ..sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
 
     return entries
-        .map((e) => _infoTile(e.key, e.value.toString()))
+        .map(
+          (e) => _infoTile(
+            e.key,
+            e.value.toString(),
+            onTap: () => _openCategory(context, e.key),
+          ),
+        )
         .toList(growable: false);
   }
 
-  List<Widget> _mapToTilesDouble(Map<String, double> map) {
+  List<Widget> _mapToTilesDouble(BuildContext context, Map<String, double> map) {
     if (map.isEmpty) {
       return [const Text('No category rating data.')];
     }
@@ -116,7 +133,13 @@ class DashboardScreen extends StatelessWidget {
       ..sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
 
     return entries
-        .map((e) => _infoTile(e.key, e.value.toStringAsFixed(2)))
+        .map(
+          (e) => _infoTile(
+            e.key,
+            e.value.toStringAsFixed(2),
+            onTap: () => _openCategory(context, e.key),
+          ),
+        )
         .toList(growable: false);
   }
 }
