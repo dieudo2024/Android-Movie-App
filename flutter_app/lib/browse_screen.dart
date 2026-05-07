@@ -5,6 +5,15 @@ import 'detail_screen.dart';
 import 'add_movie_screen.dart';
 
 class BrowseScreen extends StatefulWidget {
+  final String? initialCategory;
+  final String? initialSearch;
+
+  const BrowseScreen({
+    super.key,
+    this.initialCategory,
+    this.initialSearch,
+  });
+
   @override
   _BrowseScreenState createState() => _BrowseScreenState();
 }
@@ -12,6 +21,7 @@ class BrowseScreen extends StatefulWidget {
 class _BrowseScreenState extends State<BrowseScreen> {
   final ApiService apiService = ApiService();
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
   
   final List<Movie> _movies = [];
   bool _isLoading = false;
@@ -38,6 +48,16 @@ class _BrowseScreenState extends State<BrowseScreen> {
   @override
   void initState() {
     super.initState();
+
+    selectedCategory = widget.initialCategory ?? 'All';
+    searchQuery = widget.initialSearch ?? '';
+    _searchController.text = searchQuery;
+    if (selectedCategory != null &&
+        selectedCategory != 'All' &&
+        !categories.contains(selectedCategory)) {
+      categories.insert(1, selectedCategory!);
+    }
+
     _scrollController.addListener(_onScroll);
     _refreshList();
   }
@@ -45,6 +65,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -119,6 +140,13 @@ class _BrowseScreenState extends State<BrowseScreen> {
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.dashboard),
+            tooltip: 'Dashboard',
+            onPressed: () {
+              Navigator.pushNamed(context, '/dashboard');
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.refresh),
             onPressed: _refreshList,
           )
@@ -130,6 +158,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
+              controller: _searchController,
               decoration: InputDecoration(
                 labelText: 'Search by title',
                 prefixIcon: Icon(Icons.search),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'browse_screen.dart';
 import 'add_movie_screen.dart';
+import 'dashboard_screen.dart';
 void main() {
   runApp(const MovieCatalogApp());
 }
@@ -20,6 +21,7 @@ class MovieCatalogApp extends StatelessWidget {
       home: BrowseScreen(),
       routes: {
         '/add': (context) => AddMovieScreen(),
+        '/dashboard': (context) => DashboardScreen(),
       },
     );
   }
