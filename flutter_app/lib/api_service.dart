@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'movie.dart';
+import 'stats.dart';
 
 class PagedMovies {
   final List<Movie> items;
@@ -34,6 +35,23 @@ class PagedMovies {
 class ApiService {
   // 10.0.2.2 is the correct alias for localhost on the Android Emulator
   static const String baseUrl = 'http://10.0.2.2:8000';
+
+  Future<Stats> fetchStats() async {
+    final uri = Uri.parse('$baseUrl/stats');
+
+    try {
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        return Stats.fromJson(data);
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Connection failed: $e');
+    }
+  }
 
   Future<PagedMovies> fetchMovies({
     String? search,

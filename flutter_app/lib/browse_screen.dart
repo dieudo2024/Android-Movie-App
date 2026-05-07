@@ -119,6 +119,13 @@ class _BrowseScreenState extends State<BrowseScreen> {
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.dashboard),
+            tooltip: 'Dashboard',
+            onPressed: () {
+              Navigator.pushNamed(context, '/dashboard');
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.refresh),
             onPressed: _refreshList,
           )
