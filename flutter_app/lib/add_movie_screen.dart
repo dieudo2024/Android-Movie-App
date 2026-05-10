@@ -13,26 +13,27 @@ class AddMovieScreen extends StatefulWidget {
 
 class _AddMovieScreenState extends State<AddMovieScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _categoryController = TextEditingController();
-  final _directorController = TextEditingController();
-  final _yearController = TextEditingController();
-  final _ratingController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _synopsisController = TextEditingController();
+  late TextEditingController _titleController;
+  late TextEditingController _categoryController;
+  late TextEditingController _directorController;
+  late TextEditingController _yearController;
+  late TextEditingController _ratingController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _synopsisController;
   bool _isSubmitting = false;
   String? _errorMessage;
+  final ApiService apiService = ApiService();
 
   @override
   void initState() {
     super.initState();
-    // Removed extra null-checks on non-nullable year/rating
-    _titleController = TextEditingController(text: widget.movieToEdit?.title ?? '');
-    _categoryController = TextEditingController(text: widget.movieToEdit?.category ?? '');
-    _yearController = TextEditingController(text: widget.movieToEdit?.year.toString() ?? '');
-    _ratingController = TextEditingController(text: widget.movieToEdit?.rating.toString() ?? '');
-    _synopsisController = TextEditingController(text: widget.movieToEdit?.synopsis ?? '');
-    _directorController = TextEditingController(text: widget.movieToEdit?.director ?? '');
+    _titleController = TextEditingController();
+    _categoryController = TextEditingController();
+    _yearController = TextEditingController();
+    _ratingController = TextEditingController();
+    _synopsisController = TextEditingController();
+    _directorController = TextEditingController();
+    _descriptionController = TextEditingController();
   }
 
   Future<void> _submit() async {
@@ -142,7 +143,7 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
                 validator: (val) => val!.isEmpty ? 'Synopsis is required' : null,
               ),
               TextFormField(
-                controller: const _descriptionController,
+                controller: _descriptionController,
                 decoration: InputDecoration(labelText: 'Description (optional)'),
               ),
               const SizedBox(height: 30),
@@ -160,17 +161,18 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
       ),
     );
   }
-}
+
 
   @override
   void dispose() {
     // Clean up controllers when the widget is destroyed
+    super.dispose();
     _titleController.dispose();
     _categoryController.dispose();
     _yearController.dispose();
     _ratingController.dispose();
     _synopsisController.dispose();
+    _descriptionController.dispose();
     _directorController.dispose();
-    super.dispose();
-  }
+   }
 }
