@@ -25,46 +25,47 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
 
   @override
   void initState() {
-    super.initState();
-    // Pre-fill fields if we are editing; otherwise, leave them empty
-    _titleController = TextEditingController(text: widget.movieToEdit?.title ?? '');
-    _categoryController = TextEditingController(text: widget.movieToEdit?.category ?? '');
-    _yearController = TextEditingController(text: widget.movieToEdit?.year.toString() ?? '');
-    _ratingController = TextEditingController(text: widget.movieToEdit?.rating.toString() ?? '');
-    _synopsisController = TextEditingController(text: widget.movieToEdit?.synopsis ?? '');
-    _directorController = TextEditingController(text: widget.movieToEdit?.director ?? '');
-  }
+  super.initState();
+  // Pre-fill fields if we are editing; otherwise, leave them empty
+  _titleController = TextEditingController(text: widget.movieToEdit?.title ?? '');
+  _categoryController = TextEditingController(text: widget.movieToEdit?.category ?? '');
+  _yearController = TextEditingController(text: widget.movieToEdit?.year?.toString() ?? '');
+  _ratingController = TextEditingController(text: widget.movieToEdit?.rating?.toString() ?? '');
+  _synopsisController = TextEditingController(text: widget.movieToEdit?.synopsis ?? '');
+  _directorController = TextEditingController(text: widget.movieToEdit?.director ?? '');
+}
 
-  void _saveMovie() async {
-    // 1. Validation check before submission [cite: 58, 138]
-    if (_formKey.currentState!.validate()) {
-      final movie = Movie(
-        id: widget.movieToEdit?.id ?? 0, // 0 for new, actual ID for edit
-        title: _titleController.text,
-        category: _categoryController.text,
-        year: int.parse(_yearController.text),
-        rating: double.parse(_ratingController.text),
-        synopsis: _synopsisController.text,
-        director: _directorController.text,
+ void _saveMovie() async {
+  // 1. Validation check before submission [cite: 58, 138]
+  if (_formKey.currentState!.validate()) {
+    final movie = Movie(
+  id: widget.movieToEdit?.id ?? 0,
+  title: _titleController.text,
+  category: _categoryController.text,
+  year: int.parse(_yearController.text),
+  rating: double.parse(_ratingController.text),
+  synopsis: _synopsisController.text,
+  director: _directorController.text,
+  createdAt: DateTime.now(),
+);
+
+    bool success;
+    if (widget.movieToEdit == null) {
+      success = await apiService.addMovie(movie);
+    } else {
+      success = await apiService.updateMovie(widget.movieToEdit?.id ?? 0, movie);
+    }
+
+    if (success) {
+      // Return 'true' to signal the BrowseScreen to refresh the list
+      Navigator.pop(context, true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save movie. Check your API.")),
       );
-
-      bool success;
-      if (widget.movieToEdit == null) {
-        success = await apiService.addMovie(movie);
-      } else {
-        success = await apiService.updateMovie(widget.movieToEdit!.id, movie);
-      }
-
-      if (success) {
-        // Return 'true' to signal the BrowseScreen to refresh the list
-        Navigator.pop(context, true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to save movie. Check your API.")),
-        );
-      }
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
