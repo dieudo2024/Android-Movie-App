@@ -113,4 +113,10 @@ class ApiService {
     );
     return response.statusCode == 200;
   }
+
+  // Delete Movie (DELETE)
+  Future<bool> deleteMovie(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/movies/$id'));
+    return response.statusCode == 200;
+  }
 }
