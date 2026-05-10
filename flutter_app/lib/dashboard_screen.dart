@@ -53,6 +53,32 @@ class DashboardScreen extends StatelessWidget {
               ..._topMoviesTiles(context, stats.topMovies),
               const SizedBox(height: 12),
 
+              _sectionTitle('Most recently added'),
+              if (stats.mostRecentMovie != null)
+                Card(
+                  elevation: 1,
+                  child: ListTile(
+                    title: Text(stats.mostRecentMovie!.title),
+                    subtitle: Text('${stats.mostRecentMovie!.category} • ${stats.mostRecentMovie!.year}'),
+                    trailing: Text(
+                      '⭐ ${stats.mostRecentMovie!.rating.toStringAsFixed(1)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailScreen(movie: stats.mostRecentMovie!),
+                        ),
+                      );
+                    },
+                  ),
+                )
+              else
+                const Text('No recent movie available.'),
+              const SizedBox(height: 12),
+              const SizedBox(height: 12),
+
               _sectionTitle('Ratings'),
               _infoTile('Average rating', stats.avgRating.toStringAsFixed(2)),
               _infoTile('Min rating', stats.minRating.toStringAsFixed(2)),
