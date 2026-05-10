@@ -49,6 +49,10 @@ class DashboardScreen extends StatelessWidget {
               _infoTile('Total movies', stats.totalMovies.toString()),
               const SizedBox(height: 12),
 
+              _sectionTitle('Top 3 highest-rated movies'),
+              ..._topMoviesTiles(context, stats.topMovies),
+              const SizedBox(height: 12),
+
               _sectionTitle('Ratings'),
               _infoTile('Average rating', stats.avgRating.toStringAsFixed(2)),
               _infoTile('Min rating', stats.minRating.toStringAsFixed(2)),
@@ -69,8 +73,6 @@ class DashboardScreen extends StatelessWidget {
               ..._mapToTilesDouble(context, stats.avgRatingByCategory),
               const SizedBox(height: 12),
 
-              _sectionTitle('Top 3 highest-rated movies'),
-              ..._topMoviesTiles(context, stats.topMovies),
             ],
           );
         },
