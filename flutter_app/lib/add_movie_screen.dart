@@ -3,70 +3,75 @@ import 'movie.dart';
 import 'api_service.dart';
 
 class AddMovieScreen extends StatefulWidget {
+  final Movie? movieToEdit;
+
+  const AddMovieScreen({super.key, this.movieToEdit});
+
   @override
   _AddMovieScreenState createState() => _AddMovieScreenState();
 }
 
 class _AddMovieScreenState extends State<AddMovieScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _categoryController = TextEditingController();
-  final _directorController = TextEditingController();
-  final _yearController = TextEditingController();
-  final _ratingController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _synopsisController = TextEditingController();
-  bool _isSubmitting = false;
-  String? _errorMessage;
+  final ApiService apiService = ApiService();
+
+  late TextEditingController _titleController;
+  late TextEditingController _categoryController;
+  late TextEditingController _yearController;
+  late TextEditingController _ratingController;
+  late TextEditingController _synopsisController;
+  late TextEditingController _directorController;
 
   @override
-  void dispose() {
-    _titleController.dispose();
-    _categoryController.dispose();
-    _directorController.dispose();
-    _yearController.dispose();
-    _ratingController.dispose();
-    _descriptionController.dispose();
-    _synopsisController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    // Removed extra null-checks on non-nullable year/rating
+    _titleController = TextEditingController(text: widget.movieToEdit?.title ?? '');
+    _categoryController = TextEditingController(text: widget.movieToEdit?.category ?? '');
+    _yearController = TextEditingController(text: widget.movieToEdit?.year.toString() ?? '');
+    _ratingController = TextEditingController(text: widget.movieToEdit?.rating.toString() ?? '');
+    _synopsisController = TextEditingController(text: widget.movieToEdit?.synopsis ?? '');
+    _directorController = TextEditingController(text: widget.movieToEdit?.director ?? '');
   }
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
-    try {
+  void _saveMovie() async {
+    if (_formKey.currentState!.validate()) {
+      // Create the movie object according to your movie.dart model
       final movie = Movie(
+        id: widget.movieToEdit?.id, // Passes null if adding, actual ID if editing
         title: _titleController.text,
         category: _categoryController.text,
         director: _directorController.text,
         year: int.parse(_yearController.text),
         rating: double.parse(_ratingController.text),
-        description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
         synopsis: _synopsisController.text,
-        createdAt: DateTime.now(),
+        createdAt: widget.movieToEdit?.createdAt ?? DateTime.now(),
       );
-      await ApiService().addMovie(movie);
-      if (mounted) {
-        Navigator.pop(context, true);
+
+      bool success;
+      if (widget.movieToEdit == null) {
+        success = await apiService.addMovie(movie);
+      } else {
+        // Ensure your api_service has the updateMovie method
+        success = await apiService.updateMovie(widget.movieToEdit!.id!, movie);
       }
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-      });
-    } finally {
-      setState(() {
-        _isSubmitting = false;
-      });
+
+      if (success) {
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to save movie. Check your API.")),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Add Movie')),
+      appBar: AppBar(
+        title: Text(widget.movieToEdit == null ? 'Add Movie' : 'Edit Movie'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -75,66 +80,63 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
             children: [
               TextFormField(
                 controller: _titleController,
-                decoration: InputDecoration(labelText: 'Title'),
-                validator: (value) => value!.isEmpty ? 'Enter a title' : null,
-                // onSaved: (value) => title = value!,
+                decoration: const InputDecoration(labelText: 'Title *'),
+                validator: (val) => val!.isEmpty ? 'Title is required' : null,
               ),
               TextFormField(
                 controller: _categoryController,
-                decoration: InputDecoration(labelText: 'Category'),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-              ),
-              TextFormField(
-                controller: _directorController,
-                decoration: InputDecoration(labelText: 'Director'),
-                validator: (value) => value!.isEmpty ? 'Enter a director' : null,
-                // onSaved: (value) => director = value!,
+                decoration: const InputDecoration(labelText: 'Category/Genre *'),
+                validator: (val) => val!.isEmpty ? 'Category is required' : null,
               ),
               TextFormField(
                 controller: _yearController,
-                decoration: InputDecoration(labelText: 'Year'),
                 keyboardType: TextInputType.number,
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Required';
-                  final year = int.tryParse(v);
-                  if (year == null || year < 1800 || year > DateTime.now().year + 1) return 'Invalid year';
-                  return null;
-                },
+                decoration: const InputDecoration(labelText: 'Year *'),
+                validator: (val) => val!.isEmpty ? 'Year is required' : null,
               ),
               TextFormField(
                 controller: _ratingController,
-                decoration: InputDecoration(labelText: 'Rating (0-10)'),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Required';
-                  final rating = double.tryParse(v);
-                  if (rating == null || rating < 0 || rating > 10) return 'Invalid rating';
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Rating (0.0 - 10.0) *'),
+                validator: (val) {
+                  if (val!.isEmpty) return 'Rating is required';
+                  double? r = double.tryParse(val);
+                  if (r == null || r < 0 || r > 10) return 'Enter 0.0 to 10.0';
                   return null;
                 },
               ),
               TextFormField(
-                controller: _synopsisController,
-                decoration: InputDecoration(labelText: 'Synopsis'),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                controller: _directorController,
+                decoration: const InputDecoration(labelText: 'Director *'),
+                validator: (val) => val!.isEmpty ? 'Director is required' : null,
               ),
               TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description (optional)'),
+                controller: _synopsisController,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'Synopsis *'),
+                validator: (val) => val!.isEmpty ? 'Synopsis is required' : null,
               ),
-              const SizedBox(height: 20),
-              if (_errorMessage != null)
-                Text(_errorMessage!, style: TextStyle(color: Colors.red)),
+              const SizedBox(height: 30),
               ElevatedButton(
-                onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting ? CircularProgressIndicator() : Text('Add Movie'),
+                onPressed: _saveMovie,
+                child: const Text('SAVE MOVIE'),
               ),
-              SizedBox(height: 20),
-              // ElevatedButton(onPressed: _submitForm, child: Text("Save Movie")),
             ],
           ),
         ),
       ),
     );
   }
-}
 
+  @override
+  void dispose() {
+    // Clean up controllers when the widget is destroyed
+    _titleController.dispose();
+    _categoryController.dispose();
+    _yearController.dispose();
+    _ratingController.dispose();
+    _synopsisController.dispose();
+    _directorController.dispose();
+    super.dispose();
+  }
+}

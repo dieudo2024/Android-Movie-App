@@ -103,4 +103,20 @@ class ApiService {
       return false;
     }
   }
+
+  // Update Movie (PUT)
+  Future<bool> updateMovie(int id, Movie movie) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/movies/$id'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(movie.toJson()),
+    );
+    return response.statusCode == 200;
+  }
+
+  // Delete Movie (DELETE)
+  Future<bool> deleteMovie(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/movies/$id'));
+    return response.statusCode == 200;
+  }
 }
