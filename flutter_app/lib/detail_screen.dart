@@ -32,30 +32,30 @@ class _DetailScreenState extends State<DetailScreen> {
     super.dispose();
   }
 
-  // void _update() => setState(() {});
+  void _update() => setState(() {});
 
-  // void _confirmDelete() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text("Delete Movie?"),
-  //       content: Text("Are you sure you want to delete ${currentMovie.title}?"),
-  //       actions: [
-  //         TextButton(child: const Text("CANCEL"), onPressed: () => Navigator.pop(context)),
-  //         TextButton(
-  //           child: const Text("DELETE", style: TextStyle(color: Colors.red)),
-  //           onPressed: () async {
-  //             bool success = await apiService.deleteMovie(currentMovie.id!);
-  //             if (success) {
-  //               Navigator.pop(context);
-  //               Navigator.pop(context, true); 
-  //             }
-  //           },
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Movie?"),
+        content: Text("Are you sure you want to delete ${currentMovie.title}?"),
+        actions: [
+          TextButton(child: const Text("CANCEL"), onPressed: () => Navigator.pop(context)),
+          TextButton(
+            child: const Text("DELETE", style: TextStyle(color: Colors.red)),
+            onPressed: () async {
+              bool success = await apiService.deleteMovie(currentMovie.id!);
+              if (success) {
+                Navigator.pop(context);
+                Navigator.pop(context, true); 
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
