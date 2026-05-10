@@ -149,3 +149,59 @@ If more than one device is connected, choose the target device when prompted.
 ### 5. Stop the app
 
 Use `q` in the terminal or stop the debug session from VS Code.
+
+## Android Emulator (Android Studio)
+
+Follow these steps to set up and run an Android emulator with Android Studio, then launch the Flutter app on the emulator.
+
+- **Install Android Studio**: Download and install from https://developer.android.com/studio. During installation, include the Android SDK and Android Virtual Device (AVD) components.
+
+- **Install Flutter & Dart plugins**: In Android Studio go to `File > Settings > Plugins` and install `Flutter` (which also installs `Dart`). Restart Android Studio if prompted.
+
+- **Configure Android SDK path**: In Android Studio go to `File > Settings > Appearance & Behavior > System Settings > Android SDK` and note the SDK location. You can set `ANDROID_SDK_ROOT` or `ANDROID_HOME` environment variable to this path if needed.
+
+- **Create a virtual device (AVD)**:
+    1. Open `AVD Manager` from the toolbar or `Tools > Device Manager`.
+    2. Click `Create Virtual Device` and choose a device (e.g., Pixel 7).
+    3. Select a system image (use a Google Play or Google APIs image with API level 30+ recommended).
+    4. Finish creating the AVD.
+
+- **Enable hardware acceleration (Not a must. Just recommended)**:
+    - On Windows, enable `Windows Hypervisor Platform` or install Intel HAXM (if using Intel CPU). Enable virtualization in BIOS if required.
+    - On macOS, the emulator uses Hypervisor.framework.
+
+- **Start the emulator**:
+    - From `AVD Manager`, click the green `Play` icon for the AVD.
+    - Or start from the command line:
+
+```bash
+cd flutter_app
+flutter emulators --launch <emulatorId>
+```
+
+- **Accept Android licenses** (if not done yet):
+
+```bash
+flutter doctor --android-licenses
+```
+
+- **Verify device is available**:
+
+```bash
+flutter devices
+```
+
+- **Run the Flutter app on the emulator**:
+
+From the project `flutter_app` directory:
+
+```bash
+flutter pub get
+flutter run
+```
+
+Or open the project in Android Studio and press the run (green) button after selecting the emulator as the target device.
+
+Troubleshooting tips:
+- If `flutter devices` does not show the emulator, ensure the emulator is running and `adb` is on your PATH (Android SDK platform-tools).
+- Run `flutter doctor` to see missing components and follow its suggestions.
