@@ -97,16 +97,37 @@ class _DetailScreenState extends State<DetailScreen> {
             const SizedBox(height: 8),
             Chip(label: Text(currentMovie.category)),
             const Divider(height: 30),
-            Text("Director: ${currentMovie.director}", style: const TextStyle(fontSize: 16)),
+            _infoRow("Category", currentMovie.category),
             const SizedBox(height: 10),
-            Text("Rating: ⭐ ${currentMovie.rating}/10", style: const TextStyle(fontSize: 16)),
+            _infoRow("Director", currentMovie.director),
+            const SizedBox(height: 10),
+            _infoRow("Year", currentMovie.year.toString()),
+            const SizedBox(height: 10),
+            _infoRow("Rating", '⭐ ${currentMovie.rating}/10'),
+            const SizedBox(height: 10),
+            _infoRow("Description", currentMovie.description?.isNotEmpty == true ? currentMovie.description! : 'N/A'),
             const SizedBox(height: 20),
             const Text("Synopsis:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text(currentMovie.synopsis, style: const TextStyle(fontSize: 16)),
+            const SizedBox(height: 20),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(fontSize: 16)),
+      ],
     );
   }
 }

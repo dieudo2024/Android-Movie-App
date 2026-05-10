@@ -1,3 +1,5 @@
+import 'movie.dart';
+
 class Stats {
   final int totalMovies;
   final double avgRating;
@@ -8,9 +10,11 @@ class Stats {
   final int? newestYear;
   final Map<String, int> moviesByCategory;
   final Map<String, double> avgRatingByCategory;
+  final List<Movie> topMovies;
 
   const Stats({
     required this.totalMovies,
+    required this.topMovies,
     required this.avgRating,
     required this.minRating,
     required this.maxRating,
@@ -40,6 +44,9 @@ class Stats {
   factory Stats.fromJson(Map<String, dynamic> json) {
     return Stats(
       totalMovies: (json['total_movies'] as num?)?.toInt() ?? 0,
+      topMovies: ((json['top_movies'] as List<dynamic>?) ?? <dynamic>[])
+          .map((item) => Movie.fromJson(item as Map<String, dynamic>))
+          .toList(),
       avgRating: (json['avg_rating'] as num?)?.toDouble() ?? 0.0,
       minRating: (json['min_rating'] as num?)?.toDouble() ?? 0.0,
       maxRating: (json['max_rating'] as num?)?.toDouble() ?? 0.0,

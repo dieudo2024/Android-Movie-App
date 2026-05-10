@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'browse_screen.dart';
+import 'movie.dart';
 import 'stats.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -65,6 +66,10 @@ class DashboardScreen extends StatelessWidget {
 
               _sectionTitle('Average rating by category'),
               ..._mapToTilesDouble(context, stats.avgRatingByCategory),
+              const SizedBox(height: 12),
+
+              _sectionTitle('Top 3 highest-rated movies'),
+              ..._topMoviesTiles(stats.topMovies),
             ],
           );
         },
@@ -141,5 +146,29 @@ class DashboardScreen extends StatelessWidget {
           ),
         )
         .toList(growable: false);
+  }
+
+  List<Widget> _topMoviesTiles(List<Movie> movies) {
+    if (movies.isEmpty) {
+      return [const Text('No top movies available.')];
+    }
+
+    return List<Widget>.generate(movies.length, (index) {
+      final movie = movies[index];
+      return Card(
+        elevation: 1,
+        child: ListTile(
+          leading: CircleAvatar(
+            child: Text('${index + 1}'),
+          ),
+          title: Text(movie.title),
+          subtitle: Text('${movie.category} • ${movie.year}'),
+          trailing: Text(
+            '⭐ ${movie.rating.toStringAsFixed(1)}',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+      );
+    });
   }
 }
