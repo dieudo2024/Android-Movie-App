@@ -14,7 +14,6 @@ class Stats {
 
   const Stats({
     required this.totalMovies,
-    required this.topMovies,
     required this.avgRating,
     required this.minRating,
     required this.maxRating,
@@ -23,6 +22,7 @@ class Stats {
     required this.newestYear,
     required this.moviesByCategory,
     required this.avgRatingByCategory,
+    required this.topMovies,
   });
 
   static Map<String, int> _parseIntMap(dynamic value) {
@@ -44,9 +44,6 @@ class Stats {
   factory Stats.fromJson(Map<String, dynamic> json) {
     return Stats(
       totalMovies: (json['total_movies'] as num?)?.toInt() ?? 0,
-      topMovies: ((json['top_movies'] as List<dynamic>?) ?? <dynamic>[])
-          .map((item) => Movie.fromJson(item as Map<String, dynamic>))
-          .toList(),
       avgRating: (json['avg_rating'] as num?)?.toDouble() ?? 0.0,
       minRating: (json['min_rating'] as num?)?.toDouble() ?? 0.0,
       maxRating: (json['max_rating'] as num?)?.toDouble() ?? 0.0,
@@ -55,6 +52,9 @@ class Stats {
       newestYear: (json['newest_year'] as num?)?.toInt(),
       moviesByCategory: _parseIntMap(json['movies_by_category']),
       avgRatingByCategory: _parseDoubleMap(json['avg_rating_by_category']),
+      topMovies: ((json['top_movies'] as List<dynamic>?) ?? <dynamic>[])
+          .map((item) => Movie.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'browse_screen.dart';
 import 'movie.dart';
+import 'detail_screen.dart';
 import 'stats.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -69,7 +70,7 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 12),
 
               _sectionTitle('Top 3 highest-rated movies'),
-              ..._topMoviesTiles(stats.topMovies),
+              ..._topMoviesTiles(context, stats.topMovies),
             ],
           );
         },
@@ -148,7 +149,7 @@ class DashboardScreen extends StatelessWidget {
         .toList(growable: false);
   }
 
-  List<Widget> _topMoviesTiles(List<Movie> movies) {
+  List<Widget> _topMoviesTiles(BuildContext context, List<Movie> movies) {
     if (movies.isEmpty) {
       return [const Text('No top movies available.')];
     }
@@ -167,6 +168,14 @@ class DashboardScreen extends StatelessWidget {
             '⭐ ${movie.rating.toStringAsFixed(1)}',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DetailScreen(movie: movie),
+              ),
+            );
+          },
         ),
       );
     });
