@@ -282,6 +282,7 @@ class MovieDatabase:
             if df.empty:
                 return {
                     "total_movies": 0,
+                    "top_movies": [],
                     "avg_rating": 0.0,
                     "min_rating": 0.0,
                     "max_rating": 0.0,
@@ -298,9 +299,22 @@ class MovieDatabase:
             avg_rating_by_category = (
                 df.groupby("category")["rating"].mean().round(2).to_dict()
             )
+            top_movies_df = df.sort_values(
+                by=["rating", "id"],
+                ascending=[False, False],
+            ).head(3)
+
+            top_movies = []
+            for _, row in top_movies_df.iterrows():
+                movie = row.to_dict()
+                created_at = movie.get("created_at")
+                if hasattr(created_at, "isoformat"):
+                    movie["created_at"] = created_at.isoformat()
+                top_movies.append(movie)
 
             return {
                 "total_movies": int(len(df)),
+                "top_movies": top_movies,
                 "avg_rating": float(df["rating"].mean().round(2)),
                 "min_rating": float(df["rating"].min()),
                 "max_rating": float(df["rating"].max()),
