@@ -298,17 +298,40 @@ class MovieDatabase:
             avg_rating_by_category = (
                 df.groupby("category")["rating"].mean().round(2).to_dict()
             )
+            # conversions to ensure JSON serializability and handle NaN values
+            avg_rating_by_category = (
+                df.groupby("category")["rating"].mean().round(2).fillna(0).to_dict()
+            )
+
+            top_movies_df = df.sort_values(by=["rating", "id"], ascending=[False, False]).head(3)
+            def _clean(rec: dict) -> dict:
+                return {
+                    k: (None if pd.isna(v) else (v.isoformat() if hasattr(v, "isoformat") else v))
+                    for k, v in rec.items()
+                }
+
+            top_movies = [_clean(r) for r in top_movies_df.to_dict(orient="records")]
+
+            ratings = df["rating"]
+            years = df["year"]
+            avg_rating = float(round(ratings.mean(), 2)) if ratings.notna().any() else 0.0
+            min_rating = float(ratings.min()) if ratings.notna().any() else 0.0
+            max_rating = float(ratings.max()) if ratings.notna().any() else 0.0
+            avg_year = float(round(years.mean(), 2)) if years.notna().any() else 0.0
+            oldest_year = int(years.min()) if years.notna().any() else None
+            newest_year = int(years.max()) if years.notna().any() else None
 
             return {
                 "total_movies": int(len(df)),
-                "avg_rating": float(df["rating"].mean().round(2)),
-                "min_rating": float(df["rating"].min()),
-                "max_rating": float(df["rating"].max()),
-                "avg_year": float(df["year"].mean().round(2)),
-                "oldest_year": int(df["year"].min()),
-                "newest_year": int(df["year"].max()),
+                "avg_rating": avg_rating,
+                "min_rating": min_rating,
+                "max_rating": max_rating,
+                "avg_year": avg_year,
+                "oldest_year": oldest_year,
+                "newest_year": newest_year,
                 "movies_by_category": movies_by_category,
                 "avg_rating_by_category": avg_rating_by_category,
+                "top_movies": top_movies,
             }
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to retrieve stats: {error}") from error
