@@ -3,6 +3,7 @@ import 'movie.dart';
 import 'api_service.dart';
 import 'detail_screen.dart';
 import 'add_movie_screen.dart';
+import 'favorites_service.dart';
 
 class BrowseScreen extends StatefulWidget {
   final String? initialCategory;
@@ -22,6 +23,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
   final ApiService apiService = ApiService();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  final FavoritesService _favorites = FavoritesService.instance;
+  late final VoidCallback _favoritesListener;
   
   final List<Movie> _movies = [];
   bool _isLoading = false;
@@ -59,6 +62,14 @@ class _BrowseScreenState extends State<BrowseScreen> {
     }
 
     _scrollController.addListener(_onScroll);
+
+    _favoritesListener = () {
+      if (!mounted) return;
+      setState(() {});
+    };
+    _favorites.addListener(_favoritesListener);
+    _favorites.load();
+
     _refreshList();
   }
 
@@ -66,6 +77,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
   void dispose() {
     _scrollController.dispose();
     _searchController.dispose();
+    _favorites.removeListener(_favoritesListener);
     super.dispose();
   }
 
@@ -144,6 +156,13 @@ class _BrowseScreenState extends State<BrowseScreen> {
             tooltip: 'Dashboard',
             onPressed: () {
               Navigator.pushNamed(context, '/dashboard');
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.favorite, color: Colors.red),
+            tooltip: 'Favorites',
+            onPressed: () {
+              Navigator.pushNamed(context, '/favorites');
             },
           ),
           IconButton(
@@ -231,11 +250,29 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                     style: TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                   subtitle: Text("${movie.category} • ${movie.year}"),
-                                  trailing: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.star, color: Colors.amber, size: 20),
-                                      Text("${movie.rating}"),
+                                      Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.star, color: Colors.amber, size: 20),
+                                          Text("${movie.rating}"),
+                                        ],
+                                      ),
+                                      if (movie.id != null)
+                                        IconButton(
+                                          tooltip: 'Toggle favorite',
+                                          icon: Icon(
+                                            _favorites.isFavorite(movie.id!)
+                                                ? Icons.favorite
+                                                : Icons.favorite_border,
+                                            color: Colors.red,
+                                          ),
+                                          onPressed: () async {
+                                            await _favorites.toggle(movie.id!);
+                                          },
+                                        ),
                                     ],
                                   ),
                                   onTap: () {
