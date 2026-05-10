@@ -13,14 +13,15 @@ class AddMovieScreen extends StatefulWidget {
 
 class _AddMovieScreenState extends State<AddMovieScreen> {
   final _formKey = GlobalKey<FormState>();
-  final ApiService apiService = ApiService();
-
-  late TextEditingController _titleController;
-  late TextEditingController _categoryController;
-  late TextEditingController _yearController;
-  late TextEditingController _ratingController;
-  late TextEditingController _synopsisController;
-  late TextEditingController _directorController;
+  final _titleController = TextEditingController();
+  final _categoryController = TextEditingController();
+  final _directorController = TextEditingController();
+  final _yearController = TextEditingController();
+  final _ratingController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _synopsisController = TextEditingController();
+  bool _isSubmitting = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -34,9 +35,13 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
     _directorController = TextEditingController(text: widget.movieToEdit?.director ?? '');
   }
 
-  void _saveMovie() async {
-    if (_formKey.currentState!.validate()) {
-      // Create the movie object according to your movie.dart model
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+    try {
       final movie = Movie(
         id: widget.movieToEdit?.id, // Passes null if adding, actual ID if editing
         title: _titleController.text,
@@ -44,6 +49,7 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
         director: _directorController.text,
         year: int.parse(_yearController.text),
         rating: double.parse(_ratingController.text),
+        description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
         synopsis: _synopsisController.text,
         createdAt: widget.movieToEdit?.createdAt ?? DateTime.now(),
       );
@@ -63,6 +69,14 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
           const SnackBar(content: Text("Failed to save movie. Check your API.")),
         );
       }
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Error when adding movie. Please try again.";
+      });
+    } finally {
+      setState(() {
+        _isSubmitting = false;
+      });
     }
   }
 
@@ -85,23 +99,34 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
               ),
               TextFormField(
                 controller: _categoryController,
-                decoration: const InputDecoration(labelText: 'Category/Genre *'),
-                validator: (val) => val!.isEmpty ? 'Category is required' : null,
+                decoration: const InputDecoration(labelText: 'Category'),
+                validator: (v) => v!.isEmpty ? 'Category is required' : null,
+              ),
+              TextFormField(
+                controller: _directorController,
+                decoration: InputDecoration(labelText: 'Director'),
+                validator: (value) => value!.isEmpty ? 'Enter a director' : null,
+                // onSaved: (value) => director = value!,
               ),
               TextFormField(
                 controller: _yearController,
+                decoration: InputDecoration(labelText: 'Year'),
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Year *'),
-                validator: (val) => val!.isEmpty ? 'Year is required' : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Year is required';
+                  final year = int.tryParse(v);
+                  if (year == null || year < 1800 || year > DateTime.now().year + 1) return 'Invalid year';
+                  return null;
+                },
               ),
               TextFormField(
                 controller: _ratingController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(labelText: 'Rating (0.0 - 10.0) *'),
-                validator: (val) {
-                  if (val!.isEmpty) return 'Rating is required';
-                  double? r = double.tryParse(val);
-                  if (r == null || r < 0 || r > 10) return 'Enter 0.0 to 10.0';
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Rating is required';
+                  final double? rating = double.tryParse(v);
+                  if (rating == null || rating < 0 || rating > 10) return 'Invalid rating';
                   return null;
                 },
               ),
@@ -116,17 +141,26 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
                 decoration: const InputDecoration(labelText: 'Synopsis *'),
                 validator: (val) => val!.isEmpty ? 'Synopsis is required' : null,
               ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: _saveMovie,
-                child: const Text('SAVE MOVIE'),
+              TextFormField(
+                controller: const _descriptionController,
+                decoration: InputDecoration(labelText: 'Description (optional)'),
               ),
+              const SizedBox(height: 30),
+              if (_errorMessage != null)
+                Text(_errorMessage!, style: TextStyle(color: Colors.red)),
+              ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                child: _isSubmitting ? CircularProgressIndicator() : Text('Add Movie'),
+              ),
+              SizedBox(height: 20),
+              // ElevatedButton(onPressed: _submitForm, child: Text("Save Movie")),
             ],
           ),
         ),
       ),
     );
   }
+}
 
   @override
   void dispose() {

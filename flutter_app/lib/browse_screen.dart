@@ -25,6 +25,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FavoritesService _favorites = FavoritesService.instance;
   late final VoidCallback _favoritesListener;
+  String? _lastFavoritesErrorShown;
   
   final List<Movie> _movies = [];
   bool _isLoading = false;
@@ -66,6 +67,17 @@ class _BrowseScreenState extends State<BrowseScreen> {
     _favoritesListener = () {
       if (!mounted) return;
       setState(() {});
+
+      final err = _favorites.errorMessage;
+      if (err != null && err != _lastFavoritesErrorShown) {
+        _lastFavoritesErrorShown = err;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(err)),
+          );
+        });
+      }
     };
     _favorites.addListener(_favoritesListener);
     _favorites.load();
