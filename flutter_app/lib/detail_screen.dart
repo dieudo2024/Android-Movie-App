@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'movie.dart';
-import 'favorites_service.dart';
+import 'api_service.dart';
+import 'add_movie_screen.dart';
+import 'favorites_service.dart'; // Import your existing service
 
 class DetailScreen extends StatefulWidget {
   final Movie movie;
-
   const DetailScreen({super.key, required this.movie});
 
   @override
@@ -12,91 +13,100 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen> {
-  final FavoritesService _favorites = FavoritesService.instance;
-  late final VoidCallback _favoritesListener;
+  final ApiService apiService = ApiService();
+  final FavoritesService _favorites = FavoritesService.instance; // Use your existing instance
+  late Movie currentMovie;
 
   @override
   void initState() {
     super.initState();
-    _favoritesListener = () {
-      if (!mounted) return;
-      setState(() {});
-    };
-    _favorites.addListener(_favoritesListener);
-    _favorites.load();
+    currentMovie = widget.movie;
+    
+    // Listen for changes so the heart updates if toggled elsewhere
+    _favorites.addListener(_update);
   }
 
   @override
   void dispose() {
-    _favorites.removeListener(_favoritesListener);
+    _favorites.removeListener(_update);
     super.dispose();
   }
 
+  // void _update() => setState(() {});
+
+  // void _confirmDelete() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: const Text("Delete Movie?"),
+  //       content: Text("Are you sure you want to delete ${currentMovie.title}?"),
+  //       actions: [
+  //         TextButton(child: const Text("CANCEL"), onPressed: () => Navigator.pop(context)),
+  //         TextButton(
+  //           child: const Text("DELETE", style: TextStyle(color: Colors.red)),
+  //           onPressed: () async {
+  //             bool success = await apiService.deleteMovie(currentMovie.id!);
+  //             if (success) {
+  //               Navigator.pop(context);
+  //               Navigator.pop(context, true); 
+  //             }
+  //           },
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   @override
   Widget build(BuildContext context) {
-    final movie = widget.movie;
-    final canFavorite = movie.id != null;
-    final isFav = canFavorite ? _favorites.isFavorite(movie.id!) : false;
+    // Check if favorited using your existing service logic
+    final isFav = currentMovie.id != null ? _favorites.isFavorite(currentMovie.id!) : false;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(movie.title),
+        title: Text(currentMovie.title),
         actions: [
+          // Favorite Toggle (Matches your Browse Screen logic)
           IconButton(
-            icon: Icon(
-              isFav ? Icons.favorite : Icons.favorite_border,
-              color: canFavorite ? Colors.red : null,
-            ),
-            tooltip: canFavorite ? 'Toggle favorite' : 'No movie id to favorite',
-            onPressed: !canFavorite
-                ? null
-                : () async {
-                    await _favorites.toggle(movie.id!);
-                  },
+            icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: Colors.red),
+            onPressed: () async {
+              if (currentMovie.id != null) {
+                await _favorites.toggle(currentMovie.id!);
+              }
+            },
           ),
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddMovieScreen(movieToEdit: currentMovie)),
+              );
+              if (result == true) Navigator.pop(context, true);
+            },
+          ),
+          IconButton(icon: const Icon(Icons.delete), onPressed: _confirmDelete),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              movie.title,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+            Text(currentMovie.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Chip(label: Text(movie.category)),
-                const SizedBox(width: 10),
-                Text("${movie.year} • ⭐ ${movie.rating}"),
-              ],
-            ),
+            Chip(label: Text(currentMovie.category)),
             const Divider(height: 30),
-            _buildInfoSection("Director", movie.director),
-            const SizedBox(height: 16),
-            _buildInfoSection("Synopsis", movie.synopsis),
-            const SizedBox(height: 16),
-            if (movie.description != null)
-              _buildInfoSection("Additional Description", movie.description!),
+            Text("Director: ${currentMovie.director}", style: const TextStyle(fontSize: 16)),
+            const SizedBox(height: 10),
+            Text("Rating: ⭐ ${currentMovie.rating}/10", style: const TextStyle(fontSize: 16)),
+            const SizedBox(height: 20),
+            const Text("Synopsis:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text(currentMovie.synopsis, style: const TextStyle(fontSize: 16)),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildInfoSection(String title, String content) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        const SizedBox(height: 4),
-        Text(content, style: const TextStyle(fontSize: 16)),
-      ],
     );
   }
 }
