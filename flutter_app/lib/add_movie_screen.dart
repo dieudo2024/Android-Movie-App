@@ -48,13 +48,20 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
         synopsis: _synopsisController.text,
         createdAt: DateTime.now(),
       );
-      await ApiService().addMovie(movie);
+      final success = await ApiService().addMovie(movie);
+      if (!success) {
+        setState(() {
+          _errorMessage = 'Failed to add movie. Please try again.';
+        });
+        return;
+      }
+
       if (mounted) {
         Navigator.pop(context, true);
       }
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = "Error when adding movie. Please try again.";
       });
     } finally {
       setState(() {
@@ -126,7 +133,9 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
                 Text(_errorMessage!, style: TextStyle(color: Colors.red)),
               ElevatedButton(
                 onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting ? CircularProgressIndicator() : Text('Add Movie'),
+                child: _isSubmitting
+                    ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text('Add Movie'),
               ),
               SizedBox(height: 20),
               // ElevatedButton(onPressed: _submitForm, child: Text("Save Movie")),

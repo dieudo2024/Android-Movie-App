@@ -15,6 +15,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   final ApiService _api = ApiService();
   final FavoritesService _favorites = FavoritesService.instance;
   late Future<List<Movie>> _future;
+  bool _shownError = false;
 
   @override
   void initState() {
@@ -48,6 +49,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Future<void> _refresh() async {
     setState(() {
       _future = _loadFavoriteMovies();
+      _shownError = false;
     });
   }
 
@@ -83,6 +85,17 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ),
               ),
             );
+          }
+
+          // Show persisted favorites-loading errors from FavoritesService as a SnackBar once
+          if (!_shownError && _favorites.errorMessage != null) {
+            _shownError = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(_favorites.errorMessage!)),
+              );
+            });
           }
 
           final movies = snapshot.data ?? <Movie>[];
