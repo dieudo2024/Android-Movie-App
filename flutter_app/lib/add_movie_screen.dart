@@ -15,7 +15,7 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
   final _formKey = GlobalKey<FormState>();
   final ApiService apiService = ApiService();
 
-  // Controllers to manage the text in each field [cite: 32, 40]
+  // Controllers to manage the text in each field
   late TextEditingController _titleController;
   late TextEditingController _categoryController;
   late TextEditingController _yearController;
@@ -26,7 +26,7 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill fields if we are editing; otherwise, leave them empty [cite: 59, 122]
+    // Pre-fill fields if we are editing; otherwise, leave them empty
     _titleController = TextEditingController(text: widget.movieToEdit?.title ?? '');
     _categoryController = TextEditingController(text: widget.movieToEdit?.category ?? '');
     _yearController = TextEditingController(text: widget.movieToEdit?.year.toString() ?? '');
@@ -39,7 +39,7 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
     // 1. Validation check before submission [cite: 58, 138]
     if (_formKey.currentState!.validate()) {
       final movie = Movie(
-        id: widget.movieToEdit?.id ?? 0, // 0 for new, actual ID for edit [cite: 33]
+        id: widget.movieToEdit?.id ?? 0, // 0 for new, actual ID for edit
         title: _titleController.text,
         category: _categoryController.text,
         year: int.parse(_yearController.text),
@@ -75,7 +75,7 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey, // Required for validation [cite: 58]
+          key: _formKey, // Required for validation
           child: ListView(
             children: [
               TextFormField(
@@ -126,15 +126,15 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
     );
   }
 
-//   @override
-//   void dispose() {
-//     // Clean up controllers when the widget is destroyed
-//     _titleController.dispose();
-//     _categoryController.dispose();
-//     _yearController.dispose();
-//     _ratingController.dispose();
-//     _synopsisController.dispose();
-//     _directorController.dispose();
-//     super.dispose();
-//   }
-// }
+  @override
+  void dispose() {
+    // Clean up controllers when the widget is destroyed
+    _titleController.dispose();
+    _categoryController.dispose();
+    _yearController.dispose();
+    _ratingController.dispose();
+    _synopsisController.dispose();
+    _directorController.dispose();
+    super.dispose();
+  }
+}
