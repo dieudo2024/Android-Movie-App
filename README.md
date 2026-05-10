@@ -1,6 +1,20 @@
 # DBA-W2026-Group7
 
-## A. Backend Setup (FastAPI)
+## Domain Choice
+
+This project is a movie catalog application.
+
+## Project Description
+
+The system combines a FastAPI backend with a Flutter frontend to manage a movie database. Users can browse movies, add new entries, update or delete existing movies, view movie details, and access dashboard and favorites features in the app.
+
+## Prerequisites
+
+- Python 3.10+ with `pip`
+- Flutter SDK 3.11+ with a configured device or emulator
+- MySQL server for the backend database
+
+## Backend Setup and Run Instructions
 
 These steps run the backend in the existing `backend` folder for this project.
 
@@ -45,9 +59,9 @@ Current dependencies in `backend/requirements.txt`:
 - pandas
 - python-dotenv
 
-### 5. Create your environment file
+### 5. Configure the database connection
 
-From inside `backend`, copy the example and update values as needed:
+Create the environment file used by the backend and update the values for your local MySQL setup:
 
 ```bash
 copy .env.example .env
@@ -59,7 +73,7 @@ On macOS/Linux:
 cp .env.example .env
 ```
 
-Default variables used by the backend:
+Backend environment variables:
 
 - DB_HOST
 - DB_USER
@@ -67,7 +81,21 @@ Default variables used by the backend:
 - DB_NAME
 - DB_PORT
 
-### 6. Run the API server
+### 6. Initialize the database
+
+If your MySQL user can create schemas automatically, you can skip this step because the backend also creates the `movie_db` schema and the `movies` table at startup.
+
+If you want to initialize the database manually, run `db_setup.sql` first.
+
+### 7. Seed the data
+
+From inside `backend`, run:
+
+```bash
+python seed_movies.py
+```
+
+### 8. Run the API server
 
 From inside `backend`:
 
@@ -75,7 +103,7 @@ From inside `backend`:
 uvicorn app.main:app --reload
 ```
 
-### 7. Verify it is running
+### 9. Verify it is running
 
 - API root: http://127.0.0.1:8000/
 - Swagger docs: http://127.0.0.1:8000/docs
@@ -86,6 +114,38 @@ You should see:
 {"message":"API is running"}
 ```
 
-### 8. Stop the server
+### 10. Stop the server
 
 Press `Ctrl + C` in the terminal.
+
+## Flutter Setup and Run Instructions
+
+These steps run the Flutter app in the `flutter_app` folder.
+
+### 1. Go to the Flutter directory
+
+```bash
+cd flutter_app
+```
+
+### 2. Get Flutter dependencies
+
+```bash
+flutter pub get
+```
+
+### 3. Make sure the backend is running
+
+Start the FastAPI server before launching the app so the UI can connect to the API.
+
+### 4. Run the Flutter app
+
+```bash
+flutter run
+```
+
+If more than one device is connected, choose the target device when prompted.
+
+### 5. Stop the app
+
+Use `q` in the terminal or stop the debug session from VS Code.

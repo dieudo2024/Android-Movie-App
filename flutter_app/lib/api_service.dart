@@ -96,11 +96,23 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(movie.toJson()),
       );
-
       // Returns true if created (201) or success (200)
-      return response.statusCode == 200 || response.statusCode == 201;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+
+      // Extract server message when available
+      String message;
+      try {
+        final body = json.decode(response.body);
+        message = body['detail'] ?? body['message'] ?? response.body;
+      } catch (_) {
+        message = response.body;
+      }
+
+      throw Exception('Server error ${response.statusCode}: $message');
     } catch (e) {
-      return false;
+      throw Exception('Connection failed: $e');
     }
   }
 
