@@ -1,6 +1,7 @@
 from . import config
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from .movie_db import MovieDatabase
 
@@ -73,7 +74,10 @@ def get_movie_by_id(movie_id: int):
 def add_movie(movie: Movie):
     try:
         movie_db.insert_movies([movie.model_dump(exclude_none=True)])
-        return {"message": "Movie added successfully"}
+        return JSONResponse(
+            status_code=201,
+            content={"message": "Movie added successfully"},
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to add movie: {e}")
 
