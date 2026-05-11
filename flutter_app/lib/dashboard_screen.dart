@@ -54,21 +54,21 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 12),
 
               _sectionTitle('Most recently added'),
-              if (stats.mostRecentMovie != null)
+              if (stats.mostRecent != null)
                 Card(
                   elevation: 1,
                   child: ListTile(
-                    title: Text(stats.mostRecentMovie!.title),
-                    subtitle: Text('${stats.mostRecentMovie!.category} • ${stats.mostRecentMovie!.year}'),
+                    title: Text(stats.mostRecent!.title),
+                    subtitle: Text('${stats.mostRecent!.category} • ${stats.mostRecent!.year}'),
                     trailing: Text(
-                      '⭐ ${stats.mostRecentMovie!.rating.toStringAsFixed(1)}',
+                      '⭐ ${stats.mostRecent!.rating.toStringAsFixed(1)}',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => DetailScreen(movie: stats.mostRecentMovie!),
+                          builder: (context) => DetailScreen(movie: stats.mostRecent!),
                         ),
                       );
                     },
