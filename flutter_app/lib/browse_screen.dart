@@ -303,13 +303,17 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                         ),
                                     ],
                                   ),
-                                  onTap: () {
-                                    Navigator.push(
+                                  onTap: () async {
+                                    final result = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => DetailScreen(movie: movie),
                                       ),
                                     );
+                                    // If movie was edited or deleted, refresh the list
+                                    if (result == true) {
+                                      _refreshList();
+                                    }
                                   },
                                 ),
                               );
