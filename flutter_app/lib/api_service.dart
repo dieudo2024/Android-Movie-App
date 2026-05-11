@@ -25,7 +25,7 @@ class PagedMovies {
           .map((item) => Movie.fromJson(item as Map<String, dynamic>))
           .toList(),
       page: json['page'] ?? 1,
-      pageSize: json['page_size'] ?? 10, // Default to 10 if missing
+      pageSize: json['page_size'] ?? 10,
       total: json['total'] ?? 0,
       totalPages: json['total_pages'] ?? 1,
     );
@@ -38,13 +38,10 @@ class ApiService {
 
   Future<Stats> fetchStats() async {
     final uri = Uri.parse('$baseUrl/stats');
-
     try {
       final response = await http.get(uri);
-
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        return Stats.fromJson(data);
+        return Stats.fromJson(json.decode(response.body));
       } else {
         throw Exception('Server error: ${response.statusCode}');
       }
@@ -59,7 +56,6 @@ class ApiService {
     int page = 1,
     int pageSize = 10,
   }) async {
-    // Build query parameters safely
     final queryParameters = <String, String>{
       'page': page.toString(),
       'page_size': pageSize.toString(),
@@ -68,7 +64,7 @@ class ApiService {
     if (search != null && search.isNotEmpty) {
       queryParameters['title'] = search;
     }
-    if (category != null && category.isNotEmpty) {
+    if (category != null && category.isNotEmpty && category != 'All') {
       queryParameters['category'] = category;
     }
 
@@ -76,7 +72,6 @@ class ApiService {
 
     try {
       final response = await http.get(uri);
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         return PagedMovies.fromJson(data);
@@ -96,39 +91,49 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(movie.toJson()),
       );
-      // Returns true if created (201) or success (200)
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
       }
-
-      // Extract server message when available
-      String message;
-      try {
-        final body = json.decode(response.body);
-        message = body['detail'] ?? body['message'] ?? response.body;
-      } catch (_) {
-        message = response.body;
-      }
-
-      throw Exception('Server error ${response.statusCode}: $message');
+      return false;
     } catch (e) {
       throw Exception('Connection failed: $e');
     }
   }
 
-  // Update Movie (PUT)
+  // UPDATED: Update Movie (PUT)
   Future<bool> updateMovie(int id, Movie movie) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/movies/$id'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(movie.toJson()),
-    );
-    return response.statusCode == 200;
+    final url = Uri.parse('$baseUrl/movies/$id');
+    try {
+      final response = await http.put(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(movie.toJson()),
+      );
+
+      // Returns true if success (200) or no content (204)
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Update Error: $e');
+      return false;
+    }
   }
 
-  // Delete Movie (DELETE)
+  // UPDATED: Delete Movie (DELETE)
   Future<bool> deleteMovie(int id) async {
-    final response = await http.delete(Uri.parse('$baseUrl/movies/$id'));
-    return response.statusCode == 200;
+    final url = Uri.parse('$baseUrl/movies/$id');
+    try {
+      final response = await http.delete(url);
+      
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Delete Error: $e');
+      return false;
+    }
   }
 }

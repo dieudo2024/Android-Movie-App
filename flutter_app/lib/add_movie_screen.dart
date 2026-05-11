@@ -27,13 +27,14 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController();
-    _categoryController = TextEditingController();
-    _yearController = TextEditingController();
-    _ratingController = TextEditingController();
-    _synopsisController = TextEditingController();
-    _directorController = TextEditingController();
-    _descriptionController = TextEditingController();
+    // PRE-LOADING DATA: Controllers now start with existing data if editing
+    _titleController = TextEditingController(text: widget.movieToEdit?.title ?? '');
+    _categoryController = TextEditingController(text: widget.movieToEdit?.category ?? '');
+    _yearController = TextEditingController(text: widget.movieToEdit?.year.toString() ?? '');
+    _ratingController = TextEditingController(text: widget.movieToEdit?.rating.toString() ?? '');
+    _synopsisController = TextEditingController(text: widget.movieToEdit?.synopsis ?? '');
+    _directorController = TextEditingController(text: widget.movieToEdit?.director ?? '');
+    _descriptionController = TextEditingController(text: widget.movieToEdit?.description ?? '');
   }
 
   Future<void> _submit() async {
@@ -44,7 +45,7 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
     });
     try {
       final movie = Movie(
-        id: widget.movieToEdit?.id, // Passes null if adding, actual ID if editing
+        id: widget.movieToEdit?.id, 
         title: _titleController.text,
         category: _categoryController.text,
         director: _directorController.text,
@@ -59,20 +60,21 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
       if (widget.movieToEdit == null) {
         success = await apiService.addMovie(movie);
       } else {
-        // Ensure your api_service has the updateMovie method
+        // Calls the update (PUT) method in your ApiService
         success = await apiService.updateMovie(widget.movieToEdit!.id!, movie);
       }
 
       if (success) {
+        // Returns true to signal BrowseScreen to refresh the list
         Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to save movie. Check your API.")),
-        );
+        setState(() {
+          _errorMessage = "Failed to save movie. Check your API.";
+        });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = "Error when adding movie. Please try again.";
+        _errorMessage = "Error saving movie. Please try again.";
       });
     } finally {
       setState(() {
@@ -100,23 +102,22 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
               ),
               TextFormField(
                 controller: _categoryController,
-                decoration: const InputDecoration(labelText: 'Category'),
+                decoration: const InputDecoration(labelText: 'Category *'),
                 validator: (v) => v!.isEmpty ? 'Category is required' : null,
               ),
               TextFormField(
                 controller: _directorController,
-                decoration: InputDecoration(labelText: 'Director'),
-                validator: (value) => value!.isEmpty ? 'Enter a director' : null,
-                // onSaved: (value) => director = value!,
+                decoration: const InputDecoration(labelText: 'Director *'),
+                validator: (val) => val!.isEmpty ? 'Director is required' : null,
               ),
               TextFormField(
                 controller: _yearController,
-                decoration: InputDecoration(labelText: 'Year'),
+                decoration: const InputDecoration(labelText: 'Year *'),
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Year is required';
                   final year = int.tryParse(v);
-                  if (year == null || year < 1800 || year > DateTime.now().year + 1) return 'Invalid year';
+                  if (year == null || year < 1888) return 'Invalid year';
                   return null;
                 },
               ),
@@ -132,11 +133,6 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
                 },
               ),
               TextFormField(
-                controller: _directorController,
-                decoration: const InputDecoration(labelText: 'Director *'),
-                validator: (val) => val!.isEmpty ? 'Director is required' : null,
-              ),
-              TextFormField(
                 controller: _synopsisController,
                 maxLines: 3,
                 decoration: const InputDecoration(labelText: 'Synopsis *'),
@@ -144,17 +140,17 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
               ),
               TextFormField(
                 controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description (optional)'),
+                decoration: const InputDecoration(labelText: 'Description (optional)'),
               ),
               const SizedBox(height: 30),
               if (_errorMessage != null)
-                Text(_errorMessage!, style: TextStyle(color: Colors.red)),
+                Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
               ElevatedButton(
                 onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting ? CircularProgressIndicator() : Text('Add Movie'),
+                child: _isSubmitting 
+                  ? const CircularProgressIndicator() 
+                  : Text(widget.movieToEdit == null ? 'Add Movie' : 'Save Changes'),
               ),
-              SizedBox(height: 20),
-              // ElevatedButton(onPressed: _submitForm, child: Text("Save Movie")),
             ],
           ),
         ),
@@ -162,11 +158,8 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
     );
   }
 
-
   @override
   void dispose() {
-    // Clean up controllers when the widget is destroyed
-    super.dispose();
     _titleController.dispose();
     _categoryController.dispose();
     _yearController.dispose();
@@ -174,5 +167,6 @@ class _AddMovieScreenState extends State<AddMovieScreen> {
     _synopsisController.dispose();
     _descriptionController.dispose();
     _directorController.dispose();
-   }
+    super.dispose();
+  }
 }
