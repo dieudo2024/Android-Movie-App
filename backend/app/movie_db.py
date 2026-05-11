@@ -352,6 +352,24 @@ class MovieDatabase:
             if connection:
                 connection.close()
 
+    def get_categories(self) -> List[str]:
+        connection = None
+        cursor = None
+        try:
+            connection = self._get_connection()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("SELECT DISTINCT category FROM movies ORDER BY category;")
+            rows = cursor.fetchall()
+            categories = [row["category"] for row in rows]
+            return categories
+        except mysql.connector.Error as error:
+            raise DatabaseError(f"Failed to retrieve categories: {error}") from error
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
+
     def close(self) -> None:
         return None
         

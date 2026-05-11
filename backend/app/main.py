@@ -114,3 +114,11 @@ def get_stats():
         return movie_db.get_stats()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve stats: {e}")
+
+@app.get("/categories")
+def get_categories():
+    try:
+        categories = movie_db.get_categories()
+        return {"categories": categories}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve categories: {e}")
