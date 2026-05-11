@@ -37,17 +37,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
   String? _errorMessage;
   String searchQuery = "";
   String? selectedCategory;
-
-  final List<String> categories = [
-    'All',
-    'Sci-Fi',
-    'Action',
-    'Drama',
-    'Comedy',
-    'Horror',
-    'Mystery',
-    'Thriller',
-  ];
+  List<String> categories = [];
+  bool _isCategoriesLoading = true;
 
   @override
   void initState() {
@@ -56,11 +47,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
     selectedCategory = widget.initialCategory ?? 'All';
     searchQuery = widget.initialSearch ?? '';
     _searchController.text = searchQuery;
-    if (selectedCategory != null &&
-        selectedCategory != 'All' &&
-        !categories.contains(selectedCategory)) {
-      categories.insert(1, selectedCategory!);
-    }
 
     _scrollController.addListener(_onScroll);
 
@@ -82,7 +68,28 @@ class _BrowseScreenState extends State<BrowseScreen> {
     _favorites.addListener(_favoritesListener);
     _favorites.load();
 
+    _loadCategories();
     _refreshList();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final loadedCategories = await apiService.fetchCategories();
+      if (!mounted) return;
+      setState(() {
+        categories = loadedCategories;
+        _isCategoriesLoading = false;
+        // Ensure selected category is valid
+        if (selectedCategory != null && !categories.contains(selectedCategory)) {
+          selectedCategory = 'All';
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isCategoriesLoading = false;
+      });
+    }
   }
 
   @override
@@ -207,25 +214,34 @@ class _BrowseScreenState extends State<BrowseScreen> {
           // Category Filter
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            child: DropdownButtonFormField<String>(
-              initialValue: selectedCategory ?? 'All',
-              decoration: InputDecoration(
-                labelText: 'Filter by Category',
-                border: OutlineInputBorder(),
-              ),
-              items: categories.map((String category) {
-                return DropdownMenuItem(
-                  value: category,
-                  child: Text(category),
-                );
-              }).toList(),
-              onChanged: (newValue) {
-                setState(() {
-                  selectedCategory = newValue;
-                });
-                _refreshList();
-              },
-            ),
+            child: _isCategoriesLoading
+                ? Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : DropdownButtonFormField<String>(
+                    initialValue: selectedCategory ?? 'All',
+                    decoration: InputDecoration(
+                      labelText: 'Filter by Category',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: categories.map((String category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        selectedCategory = newValue;
+                      });
+                      _refreshList();
+                    },
+                  ),
           ),
           
           // List View Area
@@ -287,13 +303,17 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                         ),
                                     ],
                                   ),
-                                  onTap: () {
-                                    Navigator.push(
+                                  onTap: () async {
+                                    final result = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => DetailScreen(movie: movie),
                                       ),
                                     );
+                                    // If movie was edited or deleted, refresh the list
+                                    if (result == true) {
+                                      _refreshList();
+                                    }
                                   },
                                 ),
                               );

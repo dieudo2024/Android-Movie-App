@@ -312,6 +312,16 @@ class MovieDatabase:
 
             top_movies = [_clean(r) for r in top_movies_df.to_dict(orient="records")]
 
+            # Most recently added movie (by created_at)
+            most_recent_movie = None
+            try:
+                most_recent_df = df.sort_values(by=["created_at"], ascending=[False]).head(1)
+                if not most_recent_df.empty:
+                    most_recent_movie = _clean(most_recent_df.to_dict(orient="records")[0])
+            except Exception:
+                # If created_at isn't parseable or missing, leave as None
+                most_recent_movie = None
+
             ratings = df["rating"]
             years = df["year"]
             avg_rating = float(round(ratings.mean(), 2)) if ratings.notna().any() else 0.0
@@ -332,9 +342,28 @@ class MovieDatabase:
                 "movies_by_category": movies_by_category,
                 "avg_rating_by_category": avg_rating_by_category,
                 "top_movies": top_movies,
+                "most_recent_movie": most_recent_movie,
             }
         except mysql.connector.Error as error:
             raise DatabaseError(f"Failed to retrieve stats: {error}") from error
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
+
+    def get_categories(self) -> List[str]:
+        connection = None
+        cursor = None
+        try:
+            connection = self._get_connection()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("SELECT DISTINCT category FROM movies ORDER BY category;")
+            rows = cursor.fetchall()
+            categories = [row["category"] for row in rows]
+            return categories
+        except mysql.connector.Error as error:
+            raise DatabaseError(f"Failed to retrieve categories: {error}") from error
         finally:
             if cursor:
                 cursor.close()

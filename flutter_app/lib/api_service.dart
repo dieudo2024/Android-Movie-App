@@ -50,6 +50,22 @@ class ApiService {
     }
   }
 
+  Future<List<String>> fetchCategories() async {
+    final uri = Uri.parse('$baseUrl/categories');
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> categories = data['categories'] ?? [];
+        return ['All', ...categories.map((c) => c.toString()).toList()];
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Connection failed: $e');
+    }
+  }
+
   Future<PagedMovies> fetchMovies({
     String? search,
     String? category,
