@@ -1,4 +1,4 @@
-# DBA-W2026-Group7
+# Android Movie App
 
 ## Domain Choice
 
